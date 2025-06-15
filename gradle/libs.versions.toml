@@ -3,6 +3,7 @@ kotlin-version = "2.1.10"
 ktor-version = "3.2.0"
 ktorClientOkhttp = "2.3.5"
 logback-version = "1.4.14"
+shadow = "8.1.1"
 
 agp = "8.7.3"
 android-compileSdk = "35"
@@ -47,6 +48,7 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-version" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 
 android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

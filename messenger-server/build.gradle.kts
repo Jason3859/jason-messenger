@@ -1,6 +1,8 @@
 plugins {
+    application
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.ktor)
+//    alias(libs.plugins.ktor)
+    alias(libs.plugins.shadow)
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
@@ -8,7 +10,7 @@ group = "dev.jason"
 version = "0.0.1"
 
 application {
-    mainClass = "io.ktor.server.netty.EngineMain"
+    mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
 repositories {
