@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureSockets() {
@@ -14,27 +15,41 @@ fun Application.configureSockets() {
         masking = false
     }
     routing {
-        webSocket("/chat") {
-            val currentUserId = call.parameters["userId"] ?: return@webSocket
-            val otherUserId = call.parameters["otherUserId"] ?: return@webSocket
-            val chatId = getChatId(currentUserId, otherUserId)
-            val connection = Connection(this, currentUserId)
-            val chatMembers = chatRooms.getOrPut(chatId) { mutableSetOf() }
-            chatMembers += connection
+        val chatSessions = ConcurrentHashMap<String, MutableList<DefaultWebSocketServerSession>>()
+
+        webSocket("/chat/{chatId}") {
+            val chatId = call.parameters["chatId"]
+            val userId = call.request.queryParameters["userId"]
+
+            if (chatId == null || userId == null) {
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Missing parameters"))
+                return@webSocket
+            }
+
+            val sessionList = chatSessions.getOrPut(chatId) { mutableListOf() }
+            sessionList.add(this)
+
+            println("User $userId connected to chat $chatId")
 
             try {
                 for (frame in incoming) {
                     if (frame is Frame.Text) {
-                        val text = frame.readText()
-                        val message = "$currentUserId: $text"
+                        val message = frame.readText()
+                        println("[$chatId][$userId]: $message")
 
-                        chatRooms[chatId]?.forEach {
-                            it.session.send(message)
+                        // Broadcast message to all other users in the chat
+                        sessionList.forEach { session ->
+                            if (session != this) {
+                                session.send("[$userId]: $message")
+                            }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                println("WebSocket error for user $userId: ${e.localizedMessage}")
             } finally {
-                chatRooms[chatId]?.remove(connection)
+                sessionList.remove(this)
+                println("User $userId disconnected from chat $chatId")
             }
         }
     }
