@@ -3,6 +3,6 @@ ktor:
         modules:
             - dev.jason.ApplicationKt.module
     deployment:
-        port: ${PORT}
+        port: ${PORT:8080}
         watch:
             - classes
