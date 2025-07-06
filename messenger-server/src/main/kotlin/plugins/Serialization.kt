@@ -1,4 +1,4 @@
-package dev.jason
+package dev.jason.plugins
 
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
