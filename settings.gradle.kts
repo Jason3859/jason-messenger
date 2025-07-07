@@ -29,3 +29,4 @@ dependencyResolutionManagement {
 
 include("messenger-server")
 include("messenger-cli")
+include(":messenger-app")
