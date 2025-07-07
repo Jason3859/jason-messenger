@@ -11,6 +11,12 @@ class LocalJsonDbRepository : DatabaseRepository {
 
     private val jsonFile = File("src\\main\\resources\\messages.json")
 
+    init {
+        if (!jsonFile.exists()) {
+            jsonFile.createNewFile()
+        }
+    }
+
     override suspend fun addMessage(message: Message) {
         if (jsonFile.readText().isNotEmpty()) {
             jsonFile.appendText(
