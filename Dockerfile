@@ -1,11 +1,11 @@
 FROM eclipse-temurin:21-jdk
 
-WORKDIR /messenger-server
+WORKDIR /workspace
 
 COPY . .
 
 RUN chmod +x ./gradlew
 
-RUN ./gradlew clean shadowJar -x test -x check
+RUN ./gradlew :messenger-server:shadowJar -x test -x check
 
-CMD ["java", "-jar", "build/libs/messenger-server-0.0.1-all.jar"]
+CMD ["java", "-jar", "messenger-server/build/libs/messenger-server-0.0.1-all.jar"]
