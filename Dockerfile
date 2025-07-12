@@ -1,17 +1,16 @@
-# Use a JDK 21 base image
 FROM eclipse-temurin:21-jdk
 
-# Set the working directory in the container
 WORKDIR /messenger-server
 
-# Copy your project files into the container
 COPY . .
 
-# Give permission to Gradle wrapper to run
 RUN chmod +x ./gradlew
 
-# Build the project (skip tests for now)
-RUN ./gradlew clean build -x test -x check
+RUN ./gradlew clean shadowJar -x test -x check
 
-# Set the default command to run your app
-CMD ["java", "-jar", "build/libs/messenger-server-0.0.1-all.jar"]
+# Rename the generated JAR to a consistent name
+RUN cp build/libs/*-all.jar app.jar
+
+# Always run the renamed JAR
+CMD ["java", "-jar", "app.jar"]
+
