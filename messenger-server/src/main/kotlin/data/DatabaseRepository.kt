@@ -18,12 +18,13 @@ class LocalJsonDbRepository : DatabaseRepository {
     }
 
     override suspend fun addMessage(message: Message) {
-        if (jsonFile.readText().isNotEmpty()) {
-            jsonFile.appendText(
-                text = Json.encodeToString(message)
-            )
+        val content = jsonFile.readText()
+        if (content.isNotEmpty()) {
+            val existing = Json.decodeFromString<List<Message>>(content)
+            val writable = existing + message
+            jsonFile.writeText(Json.encodeToString(writable))
         } else {
-            jsonFile.writeText(Json.encodeToString(message))
+            jsonFile.writeText(Json.encodeToString(listOf(message)))
         }
     }
 }
