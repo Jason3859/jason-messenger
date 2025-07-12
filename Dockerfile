@@ -8,9 +8,4 @@ RUN chmod +x ./gradlew
 
 RUN ./gradlew clean shadowJar -x test -x check
 
-# Rename the generated JAR to a consistent name
-RUN cp build/libs/*-all.jar app.jar
-
-# Always run the renamed JAR
-CMD ["java", "-jar", "app.jar"]
-
+CMD ["java", "-jar", "build/libs/messenger-server-0.0.1-all.jar"]
