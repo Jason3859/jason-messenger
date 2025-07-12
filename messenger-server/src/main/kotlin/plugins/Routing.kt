@@ -14,7 +14,7 @@ fun Application.configureRouting() {
         get("/messages") {
             val code = call.parameters["code"]
 
-            if (code != System.getenv("code")) {
+            if (code != System.getenv("CODE")) {
                 call.respond("Unauthorized")
                 return@get
             }
