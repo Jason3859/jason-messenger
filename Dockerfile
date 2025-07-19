@@ -1,11 +1,8 @@
-FROM eclipse-temurin:21-jdk
-
-WORKDIR /workspace
-
+FROM eclipse-temurin:21-jdk-alpine AS builder
 COPY . .
+RUN ./gradlew clean shadowJar --no-daemon
 
-RUN chmod +x ./gradlew
-
-RUN ./gradlew :messenger-server:shadowJar -x test -x check
-
-CMD ["java", "-jar", "messenger-server/build/libs/messenger-server-0.0.1-all.jar"]
+FROM eclipse-temurin:21-jre-alpine
+COPY --from=builder /messenger-server/build/libs/messenger-server-0.0.1-all.jar app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
