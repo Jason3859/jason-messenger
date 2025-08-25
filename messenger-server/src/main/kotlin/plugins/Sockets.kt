@@ -1,11 +1,16 @@
 package dev.jason.plugins
 
-import dev.jason.data.DatabaseRepository
-import dev.jason.data.Message
+import dev.jason.data.MessageDto
+import dev.jason.data.toDomain
+import dev.jason.data.toDto
+import dev.jason.data.toLong
+import dev.jason.domain.DatabaseRepository
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
@@ -20,38 +25,36 @@ fun Application.configureSockets(dbRepository: DatabaseRepository) {
     routing {
         val chatSessions = ConcurrentHashMap<String, MutableList<DefaultWebSocketServerSession>>()
 
-        webSocket("/chat/{chatId}") {
-            val chatId = call.parameters["chatId"]
+        webSocket("/chat/{chatRoomId}") {
+            val chatRoomId = call.parameters["chatRoomId"]
             val userId = call.request.queryParameters["userId"]
 
-            if (chatId == null || userId == null) {
+            if (chatRoomId == null || userId == null) {
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Missing parameters"))
                 return@webSocket
             }
 
-            val sessionList = chatSessions.getOrPut(chatId) { mutableListOf() }
+            val sessionList = chatSessions.getOrPut(chatRoomId) { mutableListOf() }
             sessionList.add(this)
 
-            println("User $userId connected to chat $chatId")
+            println("User $userId connected to chat $chatRoomId")
 
             try {
                 for (frame in incoming) {
                     if (frame is Frame.Text) {
                         val message = frame.readText()
-                        println("[$chatId][$userId]: $message")
-                        dbRepository.addMessage(
-                            Message(
-                                id = Random.nextLong(),
-                                sender = userId,
-                                chatId = chatId,
-                                message = message
-                            )
+                        val serializedMessage = MessageDto(
+                            id = Random.nextLong(),
+                            chatRoomId = chatRoomId,
+                            sender = userId,
+                            message = message,
+                            timestamp = LocalDateTime.now().toLong()
                         )
-
-                        // Broadcast message to all other users in the chat
+                        dbRepository.addMessage(serializedMessage.toDomain())
                         sessionList.forEach { session ->
                             if (session != this) {
-                                session.send("[$userId]: $message")
+                                val msgToSend = dbRepository.getAllMessages().first { it.message == message }
+                                session.send(Json.encodeToString(msgToSend.toDto()))
                             }
                         }
                     }
@@ -60,7 +63,7 @@ fun Application.configureSockets(dbRepository: DatabaseRepository) {
                 println("WebSocket error for user $userId: ${e.localizedMessage}")
             } finally {
                 sessionList.remove(this)
-                println("User $userId disconnected from chat $chatId")
+                println("User $userId disconnected from chat $chatRoomId")
             }
         }
     }

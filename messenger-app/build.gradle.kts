@@ -46,6 +46,12 @@ kotlin {
     }
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 android {
     namespace = packageName
     compileSdk = libs.versions.android.compileSdk.get().toInt()

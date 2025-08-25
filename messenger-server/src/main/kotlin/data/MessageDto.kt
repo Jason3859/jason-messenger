@@ -3,9 +3,10 @@ package dev.jason.data
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Message(
+data class MessageDto(
     val id: Long,
-    val chatId: String,
+    val chatRoomId: String,
     val sender: String,
-    val message: String
+    val message: String,
+    val timestamp: Long
 )
