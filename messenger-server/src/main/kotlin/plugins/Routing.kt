@@ -63,9 +63,14 @@ fun Application.configureRouting() {
         }
 
         delete("/delete-chatroom") {
+            @Serializable
+            data class ChatroomDto(val chatroomID: String)
             try {
-                val body = call.receive<Map<String, String>>()
-                dbRepository.addMessage()
+                val body = call.receive<ChatroomDto>()
+                dbRepository.deleteChatRoom(body.chatroomID)
+                call.respond(Response.Success)
+            } catch (e: Exception) {
+                call.respond(e.localizedMessage)
             }
         }
     }
