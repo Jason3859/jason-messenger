@@ -5,17 +5,22 @@ import dev.jason.data.toDomain
 import dev.jason.data.toDto
 import dev.jason.data.toLong
 import dev.jason.domain.DatabaseRepository
+import dev.jason.domain.Response
+import dev.jason.domain.UserRepository
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
-fun Application.configureSockets(dbRepository: DatabaseRepository) {
+fun Application.configureSockets() {
+    val dbRepository by inject<DatabaseRepository>()
+    val userRepository by inject<UserRepository>()
     install(WebSockets) {
         pingPeriod = 15.seconds
         timeout = 15.seconds
@@ -27,17 +32,29 @@ fun Application.configureSockets(dbRepository: DatabaseRepository) {
 
         webSocket("/chat/{chatRoomId}") {
             val chatRoomId = call.parameters["chatRoomId"]
-            val userId = call.request.queryParameters["userId"]
+            val username = call.request.queryParameters["userId"]
+            val password = call.request.queryParameters["password"]
 
-            if (chatRoomId == null || userId == null) {
+            if (chatRoomId == null || username == null || password == null) {
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Missing parameters"))
                 return@webSocket
+            }
+
+            val user = userRepository.findUser(username, password)
+
+            if (user is Response.NotFound) {
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Signup first"))
+                return@webSocket
+            }
+
+            if (user is Response.InvalidPassword) {
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid password"))
             }
 
             val sessionList = chatSessions.getOrPut(chatRoomId) { mutableListOf() }
             sessionList.add(this)
 
-            println("User $userId connected to chat $chatRoomId")
+            println("User $username connected to chat $chatRoomId")
 
             try {
                 for (frame in incoming) {
@@ -46,7 +63,7 @@ fun Application.configureSockets(dbRepository: DatabaseRepository) {
                         val serializedMessage = MessageDto(
                             id = Random.nextLong(),
                             chatRoomId = chatRoomId,
-                            sender = userId,
+                            sender = username,
                             message = message,
                             timestamp = LocalDateTime.now().toLong()
                         )
@@ -60,10 +77,10 @@ fun Application.configureSockets(dbRepository: DatabaseRepository) {
                     }
                 }
             } catch (e: Exception) {
-                println("WebSocket error for user $userId: ${e.localizedMessage}")
+                println("WebSocket error for user $username: ${e.localizedMessage}")
             } finally {
                 sessionList.remove(this)
-                println("User $userId disconnected from chat $chatRoomId")
+                println("User $username disconnected from chat $chatRoomId")
             }
         }
     }

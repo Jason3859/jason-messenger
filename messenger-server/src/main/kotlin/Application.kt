@@ -18,9 +18,8 @@ fun main(args: Array<String>) {
 fun Application.module() {
     initKoin()
     DatabaseFactory.init(environment.config)
-    val dbRepository by inject<DatabaseRepository>()
     configureSerialization()
-    configureSockets(dbRepository)
+    configureSockets()
     configureRouting()
 }
 
