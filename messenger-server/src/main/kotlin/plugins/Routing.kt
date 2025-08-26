@@ -2,8 +2,9 @@ package dev.jason.plugins
 
 import dev.jason.data.UsersDto
 import dev.jason.data.toDomain
+import dev.jason.domain.DatabaseRepository
 import dev.jason.domain.UserRepository
-import dev.jason.domain.UsersResponse
+import dev.jason.domain.Response
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -15,7 +16,8 @@ import org.koin.ktor.ext.inject
 data class Response(val username: String?, val password: String?, val verified: Boolean)
 
 fun Application.configureRouting() {
-    val repository by inject<UserRepository>()
+    val userRepository by inject<UserRepository>()
+    val dbRepository by inject<DatabaseRepository>()
     routing {
         get("/") {
             call.respondText("Hello World!")
@@ -24,7 +26,7 @@ fun Application.configureRouting() {
         post("/signup") {
             try {
                 val body = call.receive<UsersDto>()
-                repository.addUser(body.toDomain())
+                userRepository.addUser(body.toDomain())
 
                 call.respond(Response(body.username, body.password, true))
             } catch (e: Exception) {
@@ -35,13 +37,13 @@ fun Application.configureRouting() {
         post("/signin") {
             try {
                 val body = call.receive<UsersDto>()
-                val result = repository.findUser(body.username, body.password)
+                val result = userRepository.findUser(body.username, body.password)
 
                 call.respond(
                     when (result) {
-                        is UsersResponse.Success -> Response(body.username, body.password, true)
-                        is UsersResponse.NotFound -> Response(null, null, false)
-                        is UsersResponse.InvalidPassword -> Response(null, "invalid", false)
+                        is Response.Success -> Response(body.username, body.password, true)
+                        is Response.NotFound -> Response(null, null, false)
+                        is Response.InvalidPassword -> Response(null, "invalid", false)
                         else -> throw IllegalArgumentException("Unknown error")
                     }
                 )
@@ -53,10 +55,17 @@ fun Application.configureRouting() {
         delete("/delete-account") {
             try {
                 val body = call.receive<UsersDto>()
-                repository.deleteUser(body.username, body.password)
-
+                userRepository.deleteUser(body.username, body.password)
+                call.respond(Response.Success)
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
+            }
+        }
+
+        delete("/delete-chatroom") {
+            try {
+                val body = call.receive<Map<String, String>>()
+                dbRepository.addMessage()
             }
         }
     }

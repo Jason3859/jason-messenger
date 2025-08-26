@@ -5,8 +5,12 @@ import dev.jason.data.toDomain
 import dev.jason.data.toLong
 import dev.jason.domain.DatabaseRepository
 import dev.jason.domain.Message
+import dev.jason.domain.Response
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class SupabaseDB : DatabaseRepository {
@@ -28,6 +32,19 @@ class SupabaseDB : DatabaseRepository {
             it[sender] = message.sender
             it[text] = message.message
             it[timestamp] = message.timestamp.toLong()
+        }
+    }
+
+    override suspend fun deleteChatRoom(chatroomID: String): Response {
+        return try {
+            val chatroom = getAllMessages().map { it.chatRoomId }
+            if (!chatroom.contains(chatroomID)) {
+                Response.NotFound
+            }
+            MessagesDao.deleteWhere { MessagesDao.chatRoomID eq chatroomID }
+            Response.Success
+        } catch (_: Exception) {
+            Response.UnableToDelete
         }
     }
 
