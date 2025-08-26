@@ -1,6 +1,7 @@
 package dev.jason.data
 
 import dev.jason.domain.Message
+import dev.jason.domain.User
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -19,6 +20,11 @@ fun MessageDto.toDomain(): Message = Message(
     sender = sender,
     message = message,
     timestamp = timestamp.toLocalDateTime()
+)
+
+fun UsersDto.toDomain(): User = User(
+    username = username,
+    password = password
 )
 
 fun LocalDateTime.toLong(): Long {

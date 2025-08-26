@@ -20,7 +20,7 @@ object DatabaseFactory {
         }
 
         transaction {
-            SchemaUtils.create(MessagesDao)
+            SchemaUtils.create(MessagesDao, UsersDao)
         }
     }
 }
