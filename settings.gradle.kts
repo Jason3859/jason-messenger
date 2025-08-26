@@ -28,4 +28,4 @@ dependencyResolutionManagement {
 }
 
 include("messenger-server")
-include("messenger-app")
+include(":messenger-android")
