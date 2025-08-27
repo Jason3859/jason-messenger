@@ -30,14 +30,14 @@ fun Application.configureRouting() {
 
                 call.respond(Response(body.username, body.password, true)).also { println("User ${body.username} signed in") }
             } catch (e: Exception) {
-                call.respond(e.localizedMessage)
+                call.respond(e.message!!)
             }
         }
 
         post("/signin") {
             try {
                 val body = call.receive<UsersDto>()
-                val result = userRepository.findUser(body.username, body.password)
+                val result = userRepository.findUser(body.toDomain())
 
                 call.respond(
                     when (result) {
@@ -55,8 +55,10 @@ fun Application.configureRouting() {
         delete("/delete-account") {
             try {
                 val body = call.receive<UsersDto>()
-                userRepository.deleteUser(body.username, body.password)
-                call.respond(Response.Success).also { println("User ${body.username} deleted their account") }
+                val response = userRepository.deleteUser(body.toDomain())
+                if (response is Response.Success) {
+                    call.respond(Response.Success()).also { println("User ${body.username} deleted their account") }
+                } else println(response)
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
             }
@@ -68,7 +70,7 @@ fun Application.configureRouting() {
             try {
                 val body = call.receive<ChatroomDto>()
                 dbRepository.deleteChatRoom(body.chatroomID)
-                call.respond(Response.Success).also { println("deleted chatroom ${body.chatroomID}") }
+                call.respond(Response.Success()).also { println("deleted chatroom ${body.chatroomID}") }
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
             }

@@ -1,11 +1,11 @@
 package dev.jason.domain
 
+import kotlinx.serialization.Serializable
+
 sealed interface Response {
-    data object Success : Response
-    data object NotFound : Response
-    data object InvalidPassword : Response
-
-    data object UnableToDelete : Response
-
-    data object UserAlreadyExists : Response
+    @Serializable data class Success(val message: String = "Success") : Response
+    @Serializable data class NotFound(val message: String = "NotFound") : Response
+    @Serializable data class InvalidPassword(val message: String = "InvalidPassword") : Response
+    @Serializable data class UnableToDelete(val message: String = "UnableToDelete") : Response
+    @Serializable data class UserAlreadyExists(val message: String = "UserAlreadyExists") : Response
 }

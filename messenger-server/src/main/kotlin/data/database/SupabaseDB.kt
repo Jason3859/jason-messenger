@@ -39,12 +39,12 @@ class SupabaseDB : DatabaseRepository {
         return try {
             val chatroom = getAllMessages().map { it.chatRoomId }
             if (!chatroom.contains(chatroomID)) {
-                Response.NotFound
+                Response.NotFound()
             }
             MessagesDao.deleteWhere { MessagesDao.chatRoomID eq chatroomID }
-            Response.Success
+            Response.Success()
         } catch (_: Exception) {
-            Response.UnableToDelete
+            Response.UnableToDelete()
         }
     }
 

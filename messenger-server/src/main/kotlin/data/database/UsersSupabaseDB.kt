@@ -15,15 +15,15 @@ class UsersSupabaseDB : UserRepository {
         val users = getAllUsers()
 
         if (users.contains(user)) {
-            Response.UserAlreadyExists
+            Response.UserAlreadyExists()
         }
 
         UsersDao.insert {
-            it[username] = username
-            it[password] = password
+            it[username] = user.username
+            it[password] = user.password
         }
 
-        Response.Success
+        Response.Success()
     }
 
     override suspend fun getAllUsers(): List<User> = dbQuery {
@@ -35,36 +35,46 @@ class UsersSupabaseDB : UserRepository {
         }
     }
 
-    override suspend fun findUser(username: String, password: String): Response {
-        return try {
-            val user = UsersDao.selectAll().map {
+    override suspend fun findUser(user: User): Response = dbQuery {
+        try {
+            val users = UsersDao.selectAll().map {
                 User(
                     username = it[UsersDao.username],
                     password = it[UsersDao.password]
                 )
-            }.first { it.username == username }
-            val isPwdValid = user.password == password
-            if (isPwdValid) {
-                Response.Success
-            } else {
-                Response.InvalidPassword
             }
-        } catch (_: Exception) {
-            Response.NotFound
+            var isPasswordValid = false
+
+            users.forEach {
+                if (it.username == user.username) {
+                    if (it.password == user.password) {
+                        isPasswordValid = true
+                    }
+                }
+            }
+
+            if (isPasswordValid) {
+                Response.Success()
+            } else {
+                Response.InvalidPassword()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Response.NotFound()
         }
     }
 
-    override suspend fun deleteUser(username: String, password: String): Response {
-        return try {
-            val user = findUser(username, password)
+    override suspend fun deleteUser(user: User): Response = dbQuery {
+        try {
+            val user = findUser(user)
             if (user is Response.Success) {
                 UsersDao.deleteWhere { UsersDao.username eq username }
-                Response.Success
+                Response.Success()
             } else {
-                Response.InvalidPassword
+                Response.InvalidPassword()
             }
         } catch (_: Exception) {
-            Response.UnableToDelete
+            Response.UnableToDelete()
         }
     }
 
