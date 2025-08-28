@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.jason.app.compose.messenger.ui.nav.Routes
+import dev.jason.app.compose.messenger.ui.screen.EnterChatroomScreen
 import dev.jason.app.compose.messenger.ui.screen.LoginScreen
 import dev.jason.app.compose.messenger.ui.screen.SigninScreen
 import dev.jason.app.compose.messenger.ui.theme.MessengerTheme
@@ -32,10 +33,20 @@ class MessengerActivity : ComponentActivity() {
                     val viewModel = viewModel<MainViewModel>(factory = MessengerApplication.viewModelFactory)
                     val navController = rememberNavController()
                     val loginUiState by viewModel.loginUiState.collectAsStateWithLifecycle()
+                    val chatroomId by viewModel.chatroomId.collectAsStateWithLifecycle()
 
-                    val file = File(getExternalFilesDir(null), "saved_prefs.json")
+                    val savedPrefs = viewModel.savedPrefs
+                    var startDestination: Routes = Routes.LoginScreen
 
-                    val startDestination: Routes = if (file.exists() && file.readText().isNotBlank()) Routes.MessageScreen else Routes.LoginScreen
+                    if (savedPrefs != null) {
+                        if (savedPrefs.chatroomId.isNotBlank()) {
+                            startDestination = Routes.MessageScreen
+                        }
+
+                        if (savedPrefs.user.username.isNotBlank() && savedPrefs.chatroomId.isBlank()) {
+                            startDestination = Routes.EnterChatroomScreen
+                        }
+                    }
 
                     NavHost(
                         navController = navController,
@@ -58,6 +69,14 @@ class MessengerActivity : ComponentActivity() {
                                 onUsernameChange = viewModel::updateUsername,
                                 onPasswordChange = viewModel::updatePassword,
                                 onSigninClick = viewModel::signin,
+                            )
+                        }
+
+                        composable<Routes.EnterChatroomScreen> {
+                            EnterChatroomScreen(
+                                chatroomId = chatroomId,
+                                onChatroomIdChange = viewModel::updateChatroomId,
+                                onConnectClick = viewModel::connect
                             )
                         }
 
