@@ -26,11 +26,16 @@ fun Application.configureRouting() {
         post("/signup") {
             try {
                 val body = call.receive<UsersDto>()
-                userRepository.addUser(body.toDomain())
+                val result = userRepository.addUser(body.toDomain())
 
+                if (result is Response.UserAlreadyExists) {
+                    call.respond(Response("user already exists", null, false))
+                    return@post
+                }
                 call.respond(Response(body.username, body.password, true)).also { println("User ${body.username} signed in") }
             } catch (e: Exception) {
                 call.respond(e.message!!)
+                e.printStackTrace()
             }
         }
 
@@ -49,6 +54,7 @@ fun Application.configureRouting() {
                 )
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
+                e.printStackTrace()
             }
         }
 
@@ -61,6 +67,7 @@ fun Application.configureRouting() {
                 } else println(response)
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
+                e.printStackTrace()
             }
         }
 
@@ -73,6 +80,7 @@ fun Application.configureRouting() {
                 call.respond(Response.Success()).also { println("deleted chatroom ${body.chatroomID}") }
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
+                e.printStackTrace()
             }
         }
     }
