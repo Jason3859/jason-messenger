@@ -40,7 +40,7 @@ class MessengerApplication : Application() {
             }
         }
 
-        private const val BASE_URL = "https://jason-messenger.onrender.com"
+        private const val BASE_URL = "http://10.0.2.2:8080"
 
         val viewModelFactory = viewModelFactory {
             initializer {
@@ -57,7 +57,7 @@ class MessengerApplication : Application() {
             }
         }
 
-    private fun CreationExtras.getApplication() = this[APPLICATION_KEY] as MessengerApplication
+        private fun CreationExtras.getApplication() = this[APPLICATION_KEY] as MessengerApplication
     }
 
     override fun onCreate() {

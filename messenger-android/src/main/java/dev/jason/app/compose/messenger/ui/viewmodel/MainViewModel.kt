@@ -26,6 +26,7 @@ class MainViewModel(
     )
 
     private val preferences = repositories.prefsRepository.getPref()
+    val savedPrefs = preferences
 
     private val savedUsername = preferences?.user?.username
     private val savedPassword = preferences?.user?.password
@@ -77,6 +78,10 @@ class MainViewModel(
 
     private val _chatroomId = MutableStateFlow("")
     val chatroomId = _chatroomId.asStateFlow()
+
+    fun updateChatroomId(roomId: String) {
+        _chatroomId.update { roomId }
+    }
 
     fun connect() {
         viewModelScope.launch {

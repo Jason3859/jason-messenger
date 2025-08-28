@@ -5,14 +5,16 @@ import android.util.Log
 import android.widget.Toast
 import dev.jason.app.compose.messenger.data.api.mappers.toDto
 import dev.jason.app.compose.messenger.domain.api.ApiRepository
+import dev.jason.app.compose.messenger.domain.api.Result
 import dev.jason.app.compose.messenger.domain.api.User
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.websocket.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class ApiRepoImpl(
@@ -21,42 +23,61 @@ class ApiRepoImpl(
     private val context: Context
 ) : ApiRepository {
 
+    @Serializable
+    data class ApiResponse(
+        val username: String?,
+        val password: String?,
+        val verified: Boolean,
+    )
+
     private lateinit var session: WebSocketSession
 
-    override suspend fun signin(user: User): Boolean {
+    override suspend fun signin(user: User): Result {
         return try {
-            val response = client.post("$baseUrl/signin") {
+            val request = client.post("$baseUrl/signup") {
+                contentType(ContentType.Application.Json)
                 setBody(Json.encodeToString(user.toDto()))
             }
-            Log.d("Signin", response.bodyAsText())
-            true
+            val response = request.bodyAsText()
+            Log.d("Signup", response)
+            val serializedResponse = Json.decodeFromString<ApiResponse>(response)
+            if (serializedResponse.verified) {
+                Toast.makeText(context, "Signed In", Toast.LENGTH_LONG).show()
+            }
+            Result.Success
         } catch (e: Exception) {
             Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
-            Log.e("Signin Error", e.localizedMessage)
-            false
+            Log.e("Signin Error", e.stackTraceToString())
+            Result.Error(e.message!!)
         }
     }
 
-    override suspend fun login(user: User): Boolean {
+    override suspend fun login(user: User): Result {
         return try {
-            val response = client.post("$baseUrl/signin") {
-                user.toDto()
+            val request = client.post("$baseUrl/signin") {
+                contentType(ContentType.Application.Json)
+                setBody(Json.encodeToString(user.toDto()))
             }
-            val body = response.body<Response>()
-            when (body) {
-                is Response.Success -> true
-                else -> false
+            val response = request.bodyAsText()
+            Log.d("signin", response)
+            val serializedResponse = Json.decodeFromString<ApiResponse>(response)
+
+            if (serializedResponse.password == "invalid") {
+                Result.InvalidPassword
             }
-        } catch (_: Exception) {
-            Toast.makeText(context, "Timeout", Toast.LENGTH_LONG).show()
-            false
+
+            Result.Success
+        } catch (e: Exception) {
+            Toast.makeText(context, e.message!!, Toast.LENGTH_LONG).show()
+            Log.e("login", e.stackTraceToString())
+            Result.Error(e.message!!)
         }
     }
 
     override suspend fun connect(
         user: User,
         chatroomID: String
-    ): Boolean {
+    ): Result {
         return try {
             client.webSocket(
                 method = HttpMethod.Get,
@@ -68,10 +89,10 @@ class ApiRepoImpl(
                 parametersOf("password", user.password)
                 session = this
             }
-            true
-        } catch (_: Exception) {
+            Result.Success
+        } catch (e: Exception) {
             Toast.makeText(context, "Timeout", Toast.LENGTH_LONG).show()
-            false
+            Result.Error(e.message!!)
         }
     }
 
