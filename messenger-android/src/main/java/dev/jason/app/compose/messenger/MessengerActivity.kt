@@ -60,6 +60,9 @@ class MessengerActivity : ComponentActivity() {
                                 onPasswordChange = viewModel::updatePassword,
                                 onLoginClick = viewModel::login,
                                 onSigninClick = { navController.navigate(Routes.SigninScreen) },
+                                onLoggedIn = {
+                                    navController.navigate(Routes.EnterChatroomScreen)
+                                },
                             )
                         }
 
@@ -69,6 +72,10 @@ class MessengerActivity : ComponentActivity() {
                                 onUsernameChange = viewModel::updateUsername,
                                 onPasswordChange = viewModel::updatePassword,
                                 onSigninClick = viewModel::signin,
+                                onSignedIn = {
+                                    viewModel.login()
+                                    navController.navigate(Routes.EnterChatroomScreen)
+                                }
                             )
                         }
 

@@ -7,6 +7,7 @@ import dev.jason.app.compose.messenger.data.database.mappers.toDomain
 import dev.jason.app.compose.messenger.data.database.mappers.toLong
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
 import dev.jason.app.compose.messenger.domain.api.ApiRepository
+import dev.jason.app.compose.messenger.domain.api.Result
 import dev.jason.app.compose.messenger.domain.api.User
 import dev.jason.app.compose.messenger.domain.database.DatabaseRepository
 import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
@@ -22,11 +23,24 @@ class MainViewModel(
 
     data class LoginUiState(
         val username: String = "",
-        val password: String = ""
+        val password: String = "",
+        val isSuccessful: Boolean = false,
     )
 
     private val preferences = repositories.prefsRepository.getPref()
     val savedPrefs = preferences
+
+    init {
+        if (preferences != null) {
+            if (preferences.user.username.isNotBlank()) {
+                loginWithSavedUser()
+            }
+
+            if (preferences.chatroomId.isNotBlank()) {
+                connectWithSavedChatroom()
+            }
+        }
+    }
 
     private val savedUsername = preferences?.user?.username
     private val savedPassword = preferences?.user?.password
@@ -44,17 +58,21 @@ class MainViewModel(
 
     fun login() {
         viewModelScope.launch {
-            repositories.prefsRepository.saveUser(User(_loginUiState.value.username, _loginUiState.value.password))
             repositories.apiRepository.login(
                 user = User(
                     username = _loginUiState.value.username,
                     password = _loginUiState.value.password
                 )
-            )
+            ).apply {
+                if (this is Result.Success) {
+                    repositories.prefsRepository.saveUser(User(_loginUiState.value.username, _loginUiState.value.password))
+                    _loginUiState.update { it.copy(isSuccessful = true) }
+                }
+            }
         }
     }
 
-    fun loginWithSavedUser() {
+    private fun loginWithSavedUser() {
         viewModelScope.launch {
             repositories.apiRepository.login(
                 user = User(
@@ -72,7 +90,11 @@ class MainViewModel(
                     username = _loginUiState.value.username,
                     password = _loginUiState.value.password
                 )
-            )
+            ).apply {
+                if (this is Result.Success) {
+                    _loginUiState.update { it.copy(isSuccessful = true) }
+                }
+            }
         }
     }
 
@@ -95,7 +117,7 @@ class MainViewModel(
         }
     }
 
-    fun connectWithSavedChatroom() {
+    private fun connectWithSavedChatroom() {
         viewModelScope.launch {
             repositories.apiRepository.connect(
                 user = preferences?.user!!,
@@ -106,6 +128,10 @@ class MainViewModel(
 
     private val _message = MutableStateFlow("")
     val message = _message.asStateFlow()
+
+    fun updateMessage(message: String) {
+        _message.update { message }
+    }
 
     fun sendMessage() {
         viewModelScope.launch {

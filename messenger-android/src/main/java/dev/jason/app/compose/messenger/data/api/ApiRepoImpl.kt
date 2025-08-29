@@ -41,10 +41,15 @@ class ApiRepoImpl(
             val response = request.bodyAsText()
             Log.d("Signup", response)
             val serializedResponse = Json.decodeFromString<ApiResponse>(response)
-            if (serializedResponse.verified) {
-                Toast.makeText(context, "Signed In", Toast.LENGTH_LONG).show()
+            if (serializedResponse.username == "user already exists") {
+                Toast.makeText(context, "User with ${user.username} already exists. Try another one.", Toast.LENGTH_LONG).show()
+                Result.UserAlreadyExists
+            } else {
+                if (serializedResponse.verified) {
+                    Toast.makeText(context, "Signed In", Toast.LENGTH_LONG).show()
+                }
+                Result.Success
             }
-            Result.Success
         } catch (e: Exception) {
             Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
             Log.e("Signin Error", e.stackTraceToString())
@@ -63,10 +68,18 @@ class ApiRepoImpl(
             val serializedResponse = Json.decodeFromString<ApiResponse>(response)
 
             if (serializedResponse.password == "invalid") {
+                Toast.makeText(context, "Invalid Password", Toast.LENGTH_LONG).show()
                 Result.InvalidPassword
+            } else if (!serializedResponse.verified) {
+                if (serializedResponse.username == null) {
+                    Toast.makeText(context, "User with username ${user.username} not found. Try signing in.", Toast.LENGTH_LONG).show()
+                    Result.NotFound
+                } else {
+                    Result.Success
+                }
+            } else {
+                Result.Success
             }
-
-            Result.Success
         } catch (e: Exception) {
             Toast.makeText(context, e.message!!, Toast.LENGTH_LONG).show()
             Log.e("login", e.stackTraceToString())
