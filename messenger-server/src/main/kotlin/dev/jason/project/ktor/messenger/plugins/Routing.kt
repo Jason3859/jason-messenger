@@ -1,10 +1,10 @@
-package dev.jason.plugins
+package dev.jason.project.ktor.messenger.plugins
 
-import dev.jason.data.UsersDto
-import dev.jason.data.toDomain
-import dev.jason.domain.DatabaseRepository
-import dev.jason.domain.UserRepository
-import dev.jason.domain.Result
+import dev.jason.project.ktor.messenger.data.UsersDto
+import dev.jason.project.ktor.messenger.data.toDomain
+import dev.jason.project.ktor.messenger.domain.DatabaseRepository
+import dev.jason.project.ktor.messenger.domain.UserRepository
+import dev.jason.project.ktor.messenger.domain.Result
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*

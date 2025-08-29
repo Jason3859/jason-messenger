@@ -1,7 +1,7 @@
-package dev.jason.data
+package dev.jason.project.ktor.messenger.data
 
-import dev.jason.domain.Message
-import dev.jason.domain.User
+import dev.jason.project.ktor.messenger.domain.Message
+import dev.jason.project.ktor.messenger.domain.User
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId

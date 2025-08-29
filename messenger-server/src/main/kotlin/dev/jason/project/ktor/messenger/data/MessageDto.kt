@@ -1,4 +1,4 @@
-package dev.jason.data
+package dev.jason.project.ktor.messenger.data
 
 import kotlinx.serialization.Serializable
 

@@ -1,14 +1,12 @@
-package dev.jason
+package dev.jason.project.ktor.messenger
 
-import dev.jason.data.database.DatabaseFactory
-import dev.jason.data.projectModule
-import dev.jason.domain.DatabaseRepository
-import dev.jason.plugins.configureRouting
-import dev.jason.plugins.configureSerialization
-import dev.jason.plugins.configureSockets
+import dev.jason.project.ktor.messenger.data.database.DatabaseFactory
+import dev.jason.project.ktor.messenger.data.projectModule
+import dev.jason.project.ktor.messenger.plugins.configureRouting
+import dev.jason.project.ktor.messenger.plugins.configureSerialization
+import dev.jason.project.ktor.messenger.plugins.configureSockets
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 
 fun main(args: Array<String>) {

@@ -1,4 +1,4 @@
-package dev.jason.domain
+package dev.jason.project.ktor.messenger.domain
 
 interface UserRepository {
     suspend fun getAllUsers(): List<User>

@@ -1,4 +1,4 @@
-package dev.jason.domain
+package dev.jason.project.ktor.messenger.domain
 
 interface DatabaseRepository {
     suspend fun addMessage(message: Message)

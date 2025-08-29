@@ -1,4 +1,4 @@
-package dev.jason.data.database
+package dev.jason.project.ktor.messenger.data.database
 
 import org.jetbrains.exposed.sql.Table
 

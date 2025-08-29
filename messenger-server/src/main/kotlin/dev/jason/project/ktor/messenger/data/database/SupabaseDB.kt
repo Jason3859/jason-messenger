@@ -1,11 +1,11 @@
-package dev.jason.data.database
+package dev.jason.project.ktor.messenger.data.database
 
-import dev.jason.data.MessageDto
-import dev.jason.data.toDomain
-import dev.jason.data.toLong
-import dev.jason.domain.DatabaseRepository
-import dev.jason.domain.Message
-import dev.jason.domain.Result
+import dev.jason.project.ktor.messenger.data.MessageDto
+import dev.jason.project.ktor.messenger.data.toDomain
+import dev.jason.project.ktor.messenger.data.toLong
+import dev.jason.project.ktor.messenger.domain.DatabaseRepository
+import dev.jason.project.ktor.messenger.domain.Message
+import dev.jason.project.ktor.messenger.domain.Result
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere

@@ -1,14 +1,15 @@
-package dev.jason.data.database
+package dev.jason.project.ktor.messenger.data.database
 
-import dev.jason.domain.User
-import dev.jason.domain.UserRepository
-import dev.jason.domain.Result
+import dev.jason.project.ktor.messenger.domain.User
+import dev.jason.project.ktor.messenger.domain.UserRepository
+import dev.jason.project.ktor.messenger.domain.Result
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import kotlin.collections.forEach
 
 class UsersSupabaseDB : UserRepository {
     override suspend fun addUser(user: User): Result = dbQuery {
