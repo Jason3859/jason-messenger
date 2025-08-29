@@ -40,7 +40,7 @@ class MessengerApplication : Application() {
             }
         }
 
-        private const val BASE_URL = "http://10.0.2.2:8080"
+        private const val BASE_URL = "https://jason-messenger.onrender.com"
 
         val viewModelFactory = viewModelFactory {
             initializer {
