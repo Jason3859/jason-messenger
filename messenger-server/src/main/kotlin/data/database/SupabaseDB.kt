@@ -5,7 +5,7 @@ import dev.jason.data.toDomain
 import dev.jason.data.toLong
 import dev.jason.domain.DatabaseRepository
 import dev.jason.domain.Message
-import dev.jason.domain.Response
+import dev.jason.domain.Result
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -35,16 +35,16 @@ class SupabaseDB : DatabaseRepository {
         }
     }
 
-    override suspend fun deleteChatRoom(chatroomID: String): Response {
+    override suspend fun deleteChatRoom(chatroomID: String): Result {
         return try {
             val chatroom = getAllMessages().map { it.chatRoomId }
             if (!chatroom.contains(chatroomID)) {
-                Response.NotFound()
+                Result.NotFound()
             }
             MessagesDao.deleteWhere { MessagesDao.chatRoomID eq chatroomID }
-            Response.Success()
+            Result.Success()
         } catch (_: Exception) {
-            Response.UnableToDelete()
+            Result.UnableToDelete()
         }
     }
 

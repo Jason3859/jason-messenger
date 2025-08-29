@@ -5,7 +5,7 @@ import dev.jason.data.toDomain
 import dev.jason.data.toDto
 import dev.jason.data.toLong
 import dev.jason.domain.DatabaseRepository
-import dev.jason.domain.Response
+import dev.jason.domain.Result
 import dev.jason.domain.User
 import dev.jason.domain.UserRepository
 import io.ktor.server.application.*
@@ -43,12 +43,12 @@ fun Application.configureSockets() {
 
             val user = userRepository.findUser(User(username, password))
 
-            if (user is Response.NotFound) {
+            if (user is Result.NotFound) {
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Signup first"))
                 return@webSocket
             }
 
-            if (user is Response.InvalidPassword) {
+            if (user is Result.InvalidPassword) {
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid password"))
             }
 

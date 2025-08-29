@@ -2,7 +2,7 @@ package dev.jason.data.database
 
 import dev.jason.domain.User
 import dev.jason.domain.UserRepository
-import dev.jason.domain.Response
+import dev.jason.domain.Result
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -11,19 +11,27 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class UsersSupabaseDB : UserRepository {
-    override suspend fun addUser(user: User): Response = dbQuery {
+    override suspend fun addUser(user: User): Result = dbQuery {
         val users = getAllUsers()
 
-        if (users.contains(user)) {
-            Response.UserAlreadyExists()
+        var alreadyExists = false
+
+        users.forEach {
+            if (it.username == user.username) {
+                alreadyExists = true
+            }
         }
 
-        UsersDao.insert {
-            it[username] = user.username
-            it[password] = user.password
-        }
+        if (alreadyExists) {
+            Result.UserAlreadyExists()
+        } else {
+            UsersDao.insert {
+                it[username] = user.username
+                it[password] = user.password
+            }
 
-        Response.Success()
+            Result.Success()
+        }
     }
 
     override suspend fun getAllUsers(): List<User> = dbQuery {
@@ -35,7 +43,7 @@ class UsersSupabaseDB : UserRepository {
         }
     }
 
-    override suspend fun findUser(user: User): Response = dbQuery {
+    override suspend fun findUser(user: User): Result = dbQuery {
         try {
             val users = UsersDao.selectAll().map {
                 User(
@@ -44,37 +52,43 @@ class UsersSupabaseDB : UserRepository {
                 )
             }
             var isPasswordValid = false
+            var userFound = false
 
             users.forEach {
                 if (it.username == user.username) {
+                    userFound = true
                     if (it.password == user.password) {
                         isPasswordValid = true
                     }
                 }
             }
 
-            if (isPasswordValid) {
-                Response.Success()
+            if (userFound) {
+                if (isPasswordValid) {
+                    Result.Success()
+                } else {
+                    Result.InvalidPassword()
+                }
             } else {
-                Response.InvalidPassword()
+                Result.NotFound()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Response.NotFound()
+            Result.NotFound()
         }
     }
 
-    override suspend fun deleteUser(user: User): Response = dbQuery {
+    override suspend fun deleteUser(user: User): Result = dbQuery {
         try {
             val user = findUser(user)
-            if (user is Response.Success) {
+            if (user is Result.Success) {
                 UsersDao.deleteWhere { UsersDao.username eq username }
-                Response.Success()
+                Result.Success()
             } else {
-                Response.InvalidPassword()
+                Result.InvalidPassword()
             }
         } catch (_: Exception) {
-            Response.UnableToDelete()
+            Result.UnableToDelete()
         }
     }
 

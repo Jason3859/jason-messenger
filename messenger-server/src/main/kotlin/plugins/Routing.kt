@@ -4,7 +4,7 @@ import dev.jason.data.UsersDto
 import dev.jason.data.toDomain
 import dev.jason.domain.DatabaseRepository
 import dev.jason.domain.UserRepository
-import dev.jason.domain.Response
+import dev.jason.domain.Result
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -28,7 +28,7 @@ fun Application.configureRouting() {
                 val body = call.receive<UsersDto>()
                 val result = userRepository.addUser(body.toDomain())
 
-                if (result is Response.UserAlreadyExists) {
+                if (result is Result.UserAlreadyExists) {
                     call.respond(Response("user already exists", null, false))
                     return@post
                 }
@@ -46,9 +46,9 @@ fun Application.configureRouting() {
 
                 call.respond(
                     when (result) {
-                        is Response.Success -> Response(body.username, body.password, true).also { println("User ${body.username} logged in") }
-                        is Response.NotFound -> Response(null, null, false)
-                        is Response.InvalidPassword -> Response(null, "invalid", false)
+                        is Result.Success -> Response(body.username, body.password, true).also { println("User ${body.username} logged in") }
+                        is Result.NotFound -> Response(null, null, false)
+                        is Result.InvalidPassword -> Response(null, "invalid", false)
                         else -> throw IllegalArgumentException("Unknown error")
                     }
                 )
@@ -62,8 +62,8 @@ fun Application.configureRouting() {
             try {
                 val body = call.receive<UsersDto>()
                 val response = userRepository.deleteUser(body.toDomain())
-                if (response is Response.Success) {
-                    call.respond(Response.Success()).also { println("User ${body.username} deleted their account") }
+                if (response is Result.Success) {
+                    call.respond(Result.Success()).also { println("User ${body.username} deleted their account") }
                 } else println(response)
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
@@ -77,7 +77,7 @@ fun Application.configureRouting() {
             try {
                 val body = call.receive<ChatroomDto>()
                 dbRepository.deleteChatRoom(body.chatroomID)
-                call.respond(Response.Success()).also { println("deleted chatroom ${body.chatroomID}") }
+                call.respond(Result.Success()).also { println("deleted chatroom ${body.chatroomID}") }
             } catch (e: Exception) {
                 call.respond(e.localizedMessage)
                 e.printStackTrace()
