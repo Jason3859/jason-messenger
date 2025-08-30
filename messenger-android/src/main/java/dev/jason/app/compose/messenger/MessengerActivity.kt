@@ -42,9 +42,6 @@ class MessengerActivity : ComponentActivity() {
                     if (savedPrefs.user?.username != null) {
                         startDestination = Routes.LoginLoadingScreen
                     }
-                    if (savedPrefs.chatroomId != null) {
-                        startDestination = Routes.LoadingScreen
-                    }
 
                     NavHost(
                         navController = navController,
