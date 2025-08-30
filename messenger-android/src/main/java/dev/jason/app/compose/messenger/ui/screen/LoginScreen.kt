@@ -16,7 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
 
 @Composable
@@ -55,6 +59,7 @@ fun LoginScreen(
                 placeholder = { Text("Enter your password") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
                 keyboardActions = KeyboardActions(
                     onDone = { onLoginClick() }
                 )

@@ -24,10 +24,9 @@ import java.io.File
 class MessengerApplication : Application() {
 
     lateinit var databaseRepository: DatabaseRepository
-
-    private lateinit var path: File
-
-    private lateinit var prefsFile: File
+    private val prefsFile: File by lazy {
+        File(getExternalFilesDir(null), "saved_prefs.json")
+    }
 
     fun getFile() = prefsFile
 
@@ -52,7 +51,8 @@ class MessengerApplication : Application() {
                             get() = ApiRepoImpl(client, BASE_URL, getApplication())
                         override val prefsRepository: PrefsRepository
                             get() = PrefsRepoImpl(getApplication().getFile())
-                    }
+                    },
+                    context = getApplication()
                 )
             }
         }
@@ -63,8 +63,6 @@ class MessengerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         databaseRepository = DbRepoImpl(createDatabase().messagesDao())
-        path = getExternalFilesDir(null) ?: throw IllegalArgumentException()
-        prefsFile = File(path, "saved_prefs.json")
     }
 
     private fun createDatabase(): MessagesDatabase {

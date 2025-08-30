@@ -1,13 +1,14 @@
 package dev.jason.app.compose.messenger
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,7 +22,6 @@ import dev.jason.app.compose.messenger.ui.screen.LoginScreen
 import dev.jason.app.compose.messenger.ui.screen.SigninScreen
 import dev.jason.app.compose.messenger.ui.theme.MessengerTheme
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
-import java.io.File
 
 class MessengerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +29,7 @@ class MessengerActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MessengerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Surface(modifier = Modifier.fillMaxSize()) {
                     val viewModel = viewModel<MainViewModel>(factory = MessengerApplication.viewModelFactory)
                     val navController = rememberNavController()
                     val loginUiState by viewModel.loginUiState.collectAsStateWithLifecycle()
@@ -38,27 +38,30 @@ class MessengerActivity : ComponentActivity() {
                     val savedPrefs = viewModel.savedPrefs
                     var startDestination: Routes = Routes.LoginScreen
 
-                    if (savedPrefs != null) {
-                        if (savedPrefs.chatroomId.isNotBlank()) {
-                            startDestination = Routes.MessageScreen
-                        }
-
-                        if (savedPrefs.user.username.isNotBlank() && savedPrefs.chatroomId.isBlank()) {
-                            startDestination = Routes.EnterChatroomScreen
-                        }
+                    if (savedPrefs.user?.username != null) {
+                        startDestination = Routes.EnterChatroomScreen
+                    }
+                    if (savedPrefs.chatroomId != null) {
+                        startDestination = Routes.MessageScreen
                     }
 
                     NavHost(
                         navController = navController,
-                        startDestination = startDestination,
-                        modifier = Modifier.padding(innerPadding)
+                        startDestination = startDestination.also { println(it) },
                     ) {
                         composable<Routes.LoginScreen> {
                             LoginScreen(
                                 uiState = loginUiState,
                                 onUsernameChange = viewModel::updateUsername,
                                 onPasswordChange = viewModel::updatePassword,
-                                onLoginClick = viewModel::login,
+                                onLoginClick = {
+                                    Toast.makeText(
+                                        this@MessengerActivity,
+                                        "Logging in",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    viewModel.login()
+                                },
                                 onSigninClick = { navController.navigate(Routes.SigninScreen) },
                                 onLoggedIn = {
                                     navController.navigate(Routes.EnterChatroomScreen)
@@ -81,9 +84,14 @@ class MessengerActivity : ComponentActivity() {
 
                         composable<Routes.EnterChatroomScreen> {
                             EnterChatroomScreen(
+                                username = loginUiState.username,
                                 chatroomId = chatroomId,
                                 onChatroomIdChange = viewModel::updateChatroomId,
-                                onConnectClick = viewModel::connect
+                                onConnectClick = viewModel::connect,
+                                onLogoutClick = {
+                                    viewModel.logout()
+                                    navController.navigateUp()
+                                }
                             )
                         }
 

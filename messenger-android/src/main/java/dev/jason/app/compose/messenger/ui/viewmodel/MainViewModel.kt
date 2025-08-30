@@ -1,16 +1,15 @@
 package dev.jason.app.compose.messenger.ui.viewmodel
 
+import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jason.app.compose.messenger.data.database.MessageEntity
 import dev.jason.app.compose.messenger.data.database.mappers.toDomain
 import dev.jason.app.compose.messenger.data.database.mappers.toLong
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
-import dev.jason.app.compose.messenger.domain.api.ApiRepository
 import dev.jason.app.compose.messenger.domain.api.Result
 import dev.jason.app.compose.messenger.domain.api.User
-import dev.jason.app.compose.messenger.domain.database.DatabaseRepository
-import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,7 +17,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 class MainViewModel(
-    private val repositories: RepositoryContainer
+    private val repositories: RepositoryContainer,
+    private val context: Context,
 ) : ViewModel() {
 
     data class LoginUiState(
@@ -30,23 +30,19 @@ class MainViewModel(
     private val preferences = repositories.prefsRepository.getPref()
     val savedPrefs = preferences
 
-    init {
-        if (preferences != null) {
-            if (preferences.user.username.isNotBlank()) {
-                loginWithSavedUser()
-            }
+    private val _loginUiState = MutableStateFlow(LoginUiState())
 
-            if (preferences.chatroomId.isNotBlank()) {
-                connectWithSavedChatroom()
-            }
+    val loginUiState = _loginUiState.asStateFlow()
+
+    init {
+        if (!preferences.user?.username.isNullOrEmpty()) {
+            loginWithSavedUser()
+            _loginUiState.update { it.copy(username = preferences.user.username) }
+        }
+        if (!preferences.chatroomId.isNullOrEmpty()) {
+            connectWithSavedChatroom()
         }
     }
-
-    private val savedUsername = preferences?.user?.username
-    private val savedPassword = preferences?.user?.password
-
-    private val _loginUiState = MutableStateFlow(LoginUiState())
-    val loginUiState = _loginUiState.asStateFlow()
 
     fun updateUsername(username: String) {
         _loginUiState.update { it.copy(username) }
@@ -68,6 +64,9 @@ class MainViewModel(
                     repositories.prefsRepository.saveUser(User(_loginUiState.value.username, _loginUiState.value.password))
                     _loginUiState.update { it.copy(isSuccessful = true) }
                 }
+                if (this is Result.NotFound) {
+                    Toast.makeText(context, "User with username ${_loginUiState.value.username} not found", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -76,8 +75,8 @@ class MainViewModel(
         viewModelScope.launch {
             repositories.apiRepository.login(
                 user = User(
-                    username = savedUsername!!,
-                    password = savedPassword!!
+                    username = preferences.user?.username!!,
+                    password = preferences.user.password
                 )
             )
         }
@@ -95,6 +94,20 @@ class MainViewModel(
                     _loginUiState.update { it.copy(isSuccessful = true) }
                 }
             }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            repositories.prefsRepository.deletePrefs()
+            _loginUiState.update { it.copy(password = "", isSuccessful = false) }
+        }
+    }
+
+    fun logoutOfChatroom() {
+        viewModelScope.launch {
+            val savedChatroom = preferences.chatroomId!!
+            repositories.prefsRepository.deleteSavedChatroomId(savedChatroom)
         }
     }
 
@@ -121,7 +134,7 @@ class MainViewModel(
         viewModelScope.launch {
             repositories.apiRepository.connect(
                 user = preferences?.user!!,
-                chatroomID = preferences.chatroomId
+                chatroomID = preferences.chatroomId!!
             )
         }
     }

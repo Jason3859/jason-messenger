@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -19,9 +20,11 @@ import androidx.compose.ui.platform.LocalContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnterChatroomScreen(
+    username: String,
     chatroomId: String,
     onChatroomIdChange: (String) -> Unit,
     onConnectClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -29,7 +32,14 @@ fun EnterChatroomScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Enter Chatroom id") }
+                title = { Text("Logged in as $username") },
+                actions = {
+                    TextButton(
+                        onClick = onLogoutClick
+                    ) {
+                        Text("Logout")
+                    }
+                }
             )
         }
     ) { innerPadding ->

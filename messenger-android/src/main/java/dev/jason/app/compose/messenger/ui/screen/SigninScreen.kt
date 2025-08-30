@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
 
 @Composable
@@ -50,6 +51,7 @@ fun SigninScreen(
                 placeholder = { Text("Enter your password") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
                 keyboardActions = KeyboardActions(
                     onDone = { onSigninClick() }
                 )
