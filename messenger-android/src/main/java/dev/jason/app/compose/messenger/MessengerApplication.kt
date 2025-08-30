@@ -51,8 +51,7 @@ class MessengerApplication : Application() {
                             get() = ApiRepoImpl(client, BASE_URL, getApplication())
                         override val prefsRepository: PrefsRepository
                             get() = PrefsRepoImpl(getApplication().getFile())
-                    },
-                    context = getApplication()
+                    }
                 )
             }
         }

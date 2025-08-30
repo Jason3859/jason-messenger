@@ -13,7 +13,6 @@ class PrefsRepoImpl(private val file: File) : PrefsRepository {
     private data class Prefs(
         val username: String? = null,
         val password: String? = null,
-        val chatroomId: String? = null
     )
 
     init {
@@ -27,21 +26,12 @@ class PrefsRepoImpl(private val file: File) : PrefsRepository {
         file.writeText(Json.encodeToString(Prefs(user.username, user.password)))
     }
 
-    override suspend fun saveChatroomId(chatroomId: String) {
-        val saved = Json.decodeFromString<Prefs>(file.readText())
-        file.writeText(Json.encodeToString(Prefs(saved.username, saved.password, saved.chatroomId)))
-    }
-
     override fun getPref(): Preferences {
         return Json.decodeFromString<Prefs>(file.readText()).toDomain()
     }
 
     override fun deletePrefs() {
         file.writeText(Json.encodeToString(Prefs()))
-    }
-
-    override fun deleteSavedChatroomId(chatroomId: String) {
-        file.writeText(Json.encodeToString(Prefs(getPref().user?.username, getPref().user?.password)))
     }
 
     private fun Prefs.toDomain(): Preferences {
@@ -51,6 +41,6 @@ class PrefsRepoImpl(private val file: File) : PrefsRepository {
             null
         }
 
-        return Preferences(user, this.chatroomId)
+        return Preferences(user)
     }
 }

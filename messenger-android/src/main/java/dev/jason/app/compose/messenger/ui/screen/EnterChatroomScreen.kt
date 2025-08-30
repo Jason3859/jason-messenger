@@ -3,7 +3,9 @@ package dev.jason.app.compose.messenger.ui.screen
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,14 +18,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnterChatroomScreen(
     username: String,
-    chatroomId: String,
+    uiState: MainViewModel.ChatroomUiState,
     onChatroomIdChange: (String) -> Unit,
     onConnectClick: () -> Unit,
+    onConnect: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -50,23 +55,39 @@ fun EnterChatroomScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text("Enter an unique id for your chatroom.")
+            Text("Share this with the one you want to chat with.")
+
+            Spacer(modifier.height(30.dp))
+
             TextField(
-                value = chatroomId,
-                onValueChange = onChatroomIdChange
+                value = uiState.chatroomId,
+                onValueChange = onChatroomIdChange,
+                placeholder = { Text("Enter chatroom id") }
             )
+
+            Spacer(modifier.height(10.dp))
 
             Button(
                 onClick = {
-                    if (chatroomId.isBlank()) {
+                    if (uiState.chatroomId.isBlank()) {
                         Toast.makeText(context, "Chatroom Id cannot be empty", Toast.LENGTH_LONG).show()
                         return@Button
                     }
-
+                    if (uiState.chatroomId.contains(' ')) {
+                        Toast.makeText(context, "Chatroom id cannot have spaces", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    Toast.makeText(context, "Connecting to ${uiState.chatroomId}", Toast.LENGTH_SHORT).show()
                     onConnectClick()
                 }
             ) {
-                Text("Connect to chatroom $chatroomId")
+                Text("Connect to chatroom ${uiState.chatroomId}")
             }
         }
+    }
+
+    if (uiState.isSuccessful) {
+        onConnect()
     }
 }

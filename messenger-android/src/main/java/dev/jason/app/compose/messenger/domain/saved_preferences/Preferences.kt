@@ -4,5 +4,4 @@ import dev.jason.app.compose.messenger.domain.api.User
 
 data class Preferences(
     val user: User?,
-    val chatroomId: String?
 )

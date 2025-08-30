@@ -16,6 +16,7 @@ import io.ktor.websocket.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.net.UnknownHostException
 
 class ApiRepoImpl(
     private val client: HttpClient,
@@ -42,7 +43,11 @@ class ApiRepoImpl(
             Log.d("Signup", response)
             val serializedResponse = Json.decodeFromString<ApiResponse>(response)
             if (serializedResponse.username == "user already exists") {
-                Toast.makeText(context, "User with ${user.username} already exists. Try another one.", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "User with ${user.username} already exists. Try another one.",
+                    Toast.LENGTH_LONG
+                ).show()
                 Result.UserAlreadyExists
             } else {
                 if (serializedResponse.verified) {
@@ -72,7 +77,11 @@ class ApiRepoImpl(
                 Result.InvalidPassword
             } else if (!serializedResponse.verified) {
                 if (serializedResponse.username == null) {
-                    Toast.makeText(context, "User with username ${user.username} not found. Try signing in.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "User with username ${user.username} not found. Try signing in.",
+                        Toast.LENGTH_LONG
+                    ).show()
                     Result.NotFound
                 } else {
                     Result.Success
@@ -81,7 +90,11 @@ class ApiRepoImpl(
                 Result.Success
             }
         } catch (e: Exception) {
-            Toast.makeText(context, e.message!!, Toast.LENGTH_LONG).show()
+            if (e is UnknownHostException) {
+                Toast.makeText(context, "No Internet", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, e.message!!, Toast.LENGTH_LONG).show()
+            }
             Log.e("login", e.stackTraceToString())
             Result.Error(e.message!!)
         }
@@ -92,19 +105,19 @@ class ApiRepoImpl(
         chatroomID: String
     ): Result {
         return try {
-            client.webSocket(
-                method = HttpMethod.Get,
-                host = baseUrl,
-                port = 8080,
-                path = "/chat/$chatroomID"
+            val session = client.webSocketSession(
+                urlString = "wss://jason-messenger.onrender.com/chat/$chatroomID"
             ) {
                 parametersOf("userId", user.username)
                 parametersOf("password", user.password)
-                session = this
             }
+            this.session = session
+            Log.d("websocket connection", "connected to $chatroomID")
+            Toast.makeText(context, "Connected to $chatroomID", Toast.LENGTH_SHORT).show()
             Result.Success
         } catch (e: Exception) {
-            Toast.makeText(context, "Timeout", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
+            Log.e("websocket error", e.stackTraceToString())
             Result.Error(e.message!!)
         }
     }
