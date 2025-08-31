@@ -2,6 +2,7 @@ package dev.jason.project.ktor.messenger.plugins
 
 import dev.jason.project.ktor.messenger.data.MessageDto
 import dev.jason.project.ktor.messenger.data.toDomain
+import dev.jason.project.ktor.messenger.data.toDto
 import dev.jason.project.ktor.messenger.data.toLong
 import dev.jason.project.ktor.messenger.domain.DatabaseRepository
 import dev.jason.project.ktor.messenger.domain.Result
@@ -11,6 +12,7 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -69,7 +71,8 @@ fun Application.configureSockets() {
                         dbRepository.addMessage(serializedMessage.toDomain())
                         sessionList.forEach { session ->
                             if (session != this) {
-                                session.send(message)
+                                val msgToSend = dbRepository.getAllMessages().first { it.message == message }
+                                session.send(Json.encodeToString(msgToSend.toDto()))
                             }
                         }
                     }
