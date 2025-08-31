@@ -71,7 +71,7 @@ fun Application.configureSockets() {
                         dbRepository.addMessage(serializedMessage.toDomain())
                         sessionList.forEach { session ->
                             if (session != this) {
-                                val msgToSend = dbRepository.getAllMessages().first { it.message == message }
+                                val msgToSend = dbRepository.getAllMessages().last { it.message == message }
                                 session.send(Json.encodeToString(msgToSend.toDto()))
                             }
                         }
