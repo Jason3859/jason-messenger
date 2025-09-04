@@ -15,7 +15,7 @@ val projectModule = module {
                 System.getenv(
                     "SUPABASE_PASSWORD"
                 )
-            }"
+            }&sslmode=require"
         )
     }
 
