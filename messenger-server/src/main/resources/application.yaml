@@ -6,9 +6,3 @@ ktor:
         port: 8080
         watch:
             - classes
-
-database:
-    supabase:
-        url: "jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?prepareThreshold=0"
-        driver: "org.postgresql.Driver"
-        username: "postgres.wybspetuojavvbpqyewv"

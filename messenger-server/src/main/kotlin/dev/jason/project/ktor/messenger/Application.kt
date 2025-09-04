@@ -1,6 +1,5 @@
 package dev.jason.project.ktor.messenger
 
-import dev.jason.project.ktor.messenger.data.database.DatabaseFactory
 import dev.jason.project.ktor.messenger.data.projectModule
 import dev.jason.project.ktor.messenger.plugins.configureRouting
 import dev.jason.project.ktor.messenger.plugins.configureSerialization
@@ -15,7 +14,6 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     initKoin()
-    DatabaseFactory.init(environment.config)
     configureSerialization()
     configureSockets()
     configureRouting()

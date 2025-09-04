@@ -12,6 +12,8 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
@@ -69,16 +71,19 @@ fun Application.configureSockets() {
                             timestamp = LocalDateTime.now().toLong()
                         )
                         dbRepository.addMessage(serializedMessage.toDomain())
-                        sessionList.forEach { session ->
-                            if (session != this) {
-                                val msgToSend = dbRepository.getAllMessages().last { it.message == message }
-                                session.send(Json.encodeToString(msgToSend.toDto()))
+                        launch(Dispatchers.IO) {
+                            sessionList.forEach { session ->
+                                if (session != this) {
+                                    val msgToSend = dbRepository.getAllMessages().last { it.message == message }
+                                    session.send(Json.encodeToString(msgToSend.toDto()))
+                                }
                             }
                         }
                     }
                 }
             } catch (e: Exception) {
                 println("WebSocket error for user $username: ${e.localizedMessage}")
+                e.printStackTrace()
             } finally {
                 sessionList.remove(this)
                 println("User $username disconnected from chat $chatRoomId")
