@@ -4,9 +4,10 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import dev.jason.app.compose.messenger.data.api.mappers.toDto
-import dev.jason.app.compose.messenger.domain.api.ApiRepository
+import dev.jason.app.compose.messenger.domain.api.ApiAuthRepository
 import dev.jason.app.compose.messenger.domain.api.Result
 import dev.jason.app.compose.messenger.domain.api.User
+import dev.jason.app.compose.messenger.domain.database.Message
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
@@ -17,11 +18,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.UnknownHostException
 
-class ApiRepoImpl(
+class ApiAuthRepoImpl(
     private val client: HttpClient,
-    private val baseUrl: String,
     private val context: Context
-) : ApiRepository {
+) : ApiAuthRepository {
+
+    private val baseUrl = "https://jason-messenger.up.railway.app"
 
     @Serializable
     data class ApiResponse(
@@ -57,7 +59,7 @@ class ApiRepoImpl(
         } catch (e: Exception) {
             Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
             Log.e("Signin Error", e.stackTraceToString())
-            Result.Error(e.message!!)
+            Result.Error(e)
         }
     }
 
@@ -95,33 +97,48 @@ class ApiRepoImpl(
                 Toast.makeText(context, e.message!!, Toast.LENGTH_LONG).show()
             }
             Log.e("login", e.stackTraceToString())
-            Result.Error(e.message!!)
+            Result.Error(e)
         }
     }
 
-    override suspend fun connect(
-        user: User,
-        chatroomID: String
-    ): Result {
+    override suspend fun connect(user: User, chatroomID: String): Result {
         return try {
-            val session = client.webSocketSession(
-                urlString = "wss://jason-messenger.onrender.com/chat/$chatroomID"
-            ) {
-                parametersOf("userId", user.username)
-                parametersOf("password", user.password)
+            session = client.webSocketSession {
+                url("wss://jason-messenger.up.railway.app/chat/$chatroomID?userId=${user.username}&password=${user.password}")
             }
-            this.session = session
-            Log.d("websocket connection", "connected to $chatroomID")
-            Toast.makeText(context, "Connected to $chatroomID", Toast.LENGTH_SHORT).show()
+
+            Log.d("ws", "Session initialized & connected")
+
+            for (frame in session.incoming) {
+                when (frame) {
+                    is Frame.Text -> {
+                        Log.d("ws", "Message: ${frame.readText()}")
+                    }
+
+                    is Frame.Close -> {
+                        Log.d("ws", "Closed by server")
+                    }
+
+                    else -> Log.d("ws", "error")
+                }
+            }
+
             Result.Success
         } catch (e: Exception) {
-            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-            Log.e("websocket error", e.stackTraceToString())
-            Result.Error(e.message!!)
+            Log.w("websocket", e.stackTraceToString())
+            Result.Error(e)
         }
     }
 
-    override suspend fun sendMessage(message: String) {
-        session.send(message)
+
+    override suspend fun listenToMessages() {
+        for (frame in session.incoming) {
+            Log.d("ws message", (frame as? Frame.Text)?.readText() ?: "error")
+        }
+    }
+
+
+    override suspend fun sendMessage(message: Message) {
+        TODO()
     }
 }

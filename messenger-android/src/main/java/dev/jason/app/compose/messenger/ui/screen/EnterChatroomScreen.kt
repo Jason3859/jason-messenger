@@ -1,6 +1,7 @@
 package dev.jason.app.compose.messenger.ui.screen
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,17 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnterChatroomScreen(
     username: String,
-    uiState: MainViewModel.ChatroomUiState,
+    uiState: ChatViewModel.ChatroomUiState,
     onChatroomIdChange: (String) -> Unit,
     onConnectClick: () -> Unit,
     onConnect: () -> Unit,
     onLogoutClick: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -84,6 +87,10 @@ fun EnterChatroomScreen(
             ) {
                 Text("Connect to chatroom ${uiState.chatroomId}")
             }
+        }
+
+        BackHandler {
+            onBack()
         }
     }
 

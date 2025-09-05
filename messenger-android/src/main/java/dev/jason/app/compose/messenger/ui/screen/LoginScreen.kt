@@ -1,5 +1,6 @@
 package dev.jason.app.compose.messenger.ui.screen
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions

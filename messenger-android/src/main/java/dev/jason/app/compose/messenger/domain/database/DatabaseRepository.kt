@@ -1,6 +1,8 @@
 package dev.jason.app.compose.messenger.domain.database
 
+import kotlinx.coroutines.flow.Flow
+
 interface DatabaseRepository {
     suspend fun addMessage(message: Message)
-    suspend fun getAllMessages(): List<Message>
+    fun getAllMessages(): Flow<List<Message>>
 }

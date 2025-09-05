@@ -27,6 +27,8 @@ private const val POSITION_START_OFFSET_INNER_CIRCLE = 135f
 fun LoadingScreen(
     loaded: Boolean,
     onLoaded: () -> Unit,
+    error: Boolean,
+    onError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
@@ -103,10 +105,11 @@ fun LoadingScreen(
     }
 
     if (loaded) onLoaded()
+    else if (error) onError()
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun LoadingPreview() {
-    LoadingScreen(false, {})
+    LoadingScreen(false, {}, false, {})
 }

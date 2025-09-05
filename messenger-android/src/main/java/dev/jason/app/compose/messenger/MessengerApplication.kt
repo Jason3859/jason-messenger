@@ -1,71 +1,123 @@
 package dev.jason.app.compose.messenger
 
 import android.app.Application
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.room.Room
-import dev.jason.app.compose.messenger.data.api.ApiRepoImpl
+import dev.jason.app.compose.messenger.data.api.ApiAuthRepoImpl
+import dev.jason.app.compose.messenger.data.api.ApiSocketImpl
 import dev.jason.app.compose.messenger.data.database.DbRepoImpl
+import dev.jason.app.compose.messenger.data.database.MessagesDao
 import dev.jason.app.compose.messenger.data.database.MessagesDatabase
 import dev.jason.app.compose.messenger.data.saved_preferences.PrefsRepoImpl
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
-import dev.jason.app.compose.messenger.domain.api.ApiRepository
+import dev.jason.app.compose.messenger.domain.api.ApiAuthRepository
+import dev.jason.app.compose.messenger.domain.api.ApiSocketRepository
 import dev.jason.app.compose.messenger.domain.database.DatabaseRepository
 import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
+import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.*
+import okhttp3.OkHttpClient
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.io.File
 
 class MessengerApplication : Application() {
 
-    lateinit var databaseRepository: DatabaseRepository
-    private val prefsFile: File by lazy {
-        File(getExternalFilesDir(null), "saved_prefs.json")
+    companion object {
+        private const val TIMEOUT_MILLIS: Long = 1_000_000_000
     }
 
-    fun getFile() = prefsFile
+    enum class Qualifier {
+        MESSAGES_DAO, DATABASE_REPOSITORY, API_AUTH_REPOSITORY,
+        API_SOCKET_REPOSITORY, PREFS_REPOSITORY, KTOR_HTTP_CLIENT, OKHTTP_CLIENT,
+        PREFS_FILE, MAIN_VIEW_MODEL, CHAT_VIEW_MODEL, REPOSITORY_CONTAINER
+    }
 
-    companion object {
-        private const val TIMEOUT_MILLIS: Long = 1000000
-        private val client = HttpClient(OkHttp) {
-            install(WebSockets)
-            install(HttpTimeout) {
-                requestTimeoutMillis = TIMEOUT_MILLIS
+
+    private val applicationModule = module {
+        single<MessagesDao>(named(Qualifier.MESSAGES_DAO)) {
+            Room.databaseBuilder<MessagesDatabase>(
+                context = get(),
+                "messages.db"
+            )
+                .build()
+                .messagesDao()
+        }
+
+        single<DatabaseRepository>(named(Qualifier.DATABASE_REPOSITORY)) {
+            DbRepoImpl(get(named(Qualifier.MESSAGES_DAO)))
+        }
+
+        single(named(Qualifier.OKHTTP_CLIENT)) {
+            OkHttpClient()
+        }
+
+        single(named(Qualifier.KTOR_HTTP_CLIENT)) {
+            HttpClient(OkHttp) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = TIMEOUT_MILLIS
+                }
             }
         }
 
-        private const val BASE_URL = "https://jason-messenger.onrender.com"
+        single<ApiAuthRepository>(named(Qualifier.API_AUTH_REPOSITORY)) {
+            ApiAuthRepoImpl(
+                client = get(named(Qualifier.KTOR_HTTP_CLIENT)),
+                context = androidContext()
+            )
+        }
 
-        val viewModelFactory = viewModelFactory {
-            initializer {
-                MainViewModel(
-                    repositories = object : RepositoryContainer {
-                        override val databaseRepository: DatabaseRepository
-                            get() = getApplication().databaseRepository
-                        override val apiRepository: ApiRepository
-                            get() = ApiRepoImpl(client, BASE_URL, getApplication())
-                        override val prefsRepository: PrefsRepository
-                            get() = PrefsRepoImpl(getApplication().getFile())
-                    }
-                )
+        single<File>(named(Qualifier.PREFS_FILE)) {
+            File(androidContext().getExternalFilesDir(null), "saved_prefs.json")
+        }
+
+        single<PrefsRepository>(named(Qualifier.PREFS_REPOSITORY)) {
+            PrefsRepoImpl(
+                file = get(named(Qualifier.PREFS_FILE))
+            )
+        }
+
+        single<ApiSocketRepository>(named(Qualifier.API_SOCKET_REPOSITORY)) {
+            ApiSocketImpl(
+                client = get(named(Qualifier.OKHTTP_CLIENT))
+            )
+        }
+
+        single<RepositoryContainer>(named(Qualifier.REPOSITORY_CONTAINER)) {
+            object : RepositoryContainer {
+                override val databaseRepository: DatabaseRepository
+                    get() = get(named(Qualifier.DATABASE_REPOSITORY))
+                override val apiAuthRepository: ApiAuthRepository
+                    get() = get(named(Qualifier.API_AUTH_REPOSITORY))
+                override val prefsRepository: PrefsRepository
+                    get() = get(named(Qualifier.PREFS_REPOSITORY))
+                override val apiSocketRepository: ApiSocketRepository
+                    get() = get(named(Qualifier.API_SOCKET_REPOSITORY))
             }
         }
 
-        private fun CreationExtras.getApplication() = this[APPLICATION_KEY] as MessengerApplication
+        single<ChatViewModel>(named(Qualifier.CHAT_VIEW_MODEL)) {
+            ChatViewModel(
+                repositories = get(named(Qualifier.REPOSITORY_CONTAINER))
+            )
+        }
+
+        single<MainViewModel>(named(Qualifier.MAIN_VIEW_MODEL)) {
+            MainViewModel(
+                repositories = get(named(Qualifier.REPOSITORY_CONTAINER))
+            )
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
-        databaseRepository = DbRepoImpl(createDatabase().messagesDao())
-    }
-
-    private fun createDatabase(): MessagesDatabase {
-        return Room.databaseBuilder<MessagesDatabase>(this, "messages.db")
-            .build()
+        startKoin {
+            androidContext(this@MessengerApplication)
+            modules(applicationModule)
+        }
     }
 }
