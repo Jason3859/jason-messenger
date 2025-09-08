@@ -83,7 +83,9 @@ fun Application.configureSockets() {
                             message = message,
                             timestamp = LocalDateTime.now().toLong()
                         )
-                        dbRepository.addMessage(serializedMessage.toDomain())
+                        if (serializedMessage.sender != "server@3859✓") {
+                            dbRepository.addMessage(serializedMessage.toDomain())
+                        }
                         launch(Dispatchers.IO) {
                             sessionList.forEach { session ->
                                 if (session != this) {
