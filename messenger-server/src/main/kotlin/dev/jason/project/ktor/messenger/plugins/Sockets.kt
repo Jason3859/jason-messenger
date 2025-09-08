@@ -58,6 +58,17 @@ fun Application.configureSockets() {
             sessionList.add(this)
 
             println("User $username connected to chat $chatRoomId")
+            send(
+                Json.encodeToString(
+                    MessageDto(
+                        id = 1,
+                        chatRoomId = chatRoomId,
+                        sender = "server",
+                        message = "User $username connected to the chat",
+                        timestamp = LocalDateTime.now().toLong()
+                    )
+                )
+            )
 
             try {
                 for (frame in incoming) {
