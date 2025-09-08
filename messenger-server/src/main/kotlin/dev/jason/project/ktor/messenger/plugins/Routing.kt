@@ -47,6 +47,11 @@ fun Application.configureRouting() {
                     call.respond(Response("user already exists", null, false))
                     return@post
                 }
+
+                if (body.username == "server@3859✓") {
+                    call.respond(Response("user already exists", null, false))
+                }
+
                 call.respond(Response(body.username, body.password, true)).also { println("User ${body.username} signed in") }
             } catch (e: Exception) {
                 call.respond(e.message!!)

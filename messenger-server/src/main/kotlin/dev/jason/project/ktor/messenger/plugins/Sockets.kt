@@ -62,9 +62,9 @@ fun Application.configureSockets() {
                 session.send(
                     Json.encodeToString(
                         MessageDto(
-                            id = 1,
+                            id = Random.nextLong(),
                             chatRoomId = chatRoomId,
-                            sender = "server",
+                            sender = "server@3859✓",
                             message = "User $username connected to the chat",
                             timestamp = LocalDateTime.now().toLong()
                         )
