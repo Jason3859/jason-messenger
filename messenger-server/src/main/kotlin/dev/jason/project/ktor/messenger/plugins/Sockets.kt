@@ -83,9 +83,7 @@ fun Application.configureSockets() {
                             message = message,
                             timestamp = LocalDateTime.now().toLong()
                         )
-                        if (serializedMessage.sender != "server@3859✓") {
-                            dbRepository.addMessage(serializedMessage.toDomain())
-                        }
+                        dbRepository.addMessage(serializedMessage.toDomain())
                         launch(Dispatchers.IO) {
                             sessionList.forEach { session ->
                                 if (session != this) {
@@ -102,6 +100,19 @@ fun Application.configureSockets() {
             } finally {
                 sessionList.remove(this)
                 println("User $username disconnected from chat $chatRoomId")
+                sessionList.forEach { session ->
+                    session.send(
+                        Json.encodeToString(
+                            MessageDto(
+                                id = Random.nextLong(),
+                                chatRoomId = chatRoomId,
+                                sender = "server@3859✓",
+                                message = "User $username disconnected from the chat",
+                                timestamp = LocalDateTime.now().toLong()
+                            )
+                        )
+                    )
+                }
             }
         }
     }
