@@ -20,9 +20,15 @@ A simple Messenger Application built with **Jetpack Compose** for android client
 
 ## How to use
 - Login/Signin first.
-- After that you will come to this screen ![](screenshots/chatroom.png)
+- After that you will come to this screen 
+
+<img src="https://raw.githubusercontent.com/Jason3859/jason-messenger/master/screenshots/chatroom.png" height="500" alt="screenshot">
+
 - Enter any unique id of your choice. Don't forget this because this is where your messages are saved. Share this with the person you want to chat with. You can also have a group chat.
-- After that you will come to this screen ![](screenshots/messaging_screen.png)
+- After that you will come to this screen 
+
+<img src="https://raw.githubusercontent.com/Jason3859/jason-messenger/master/screenshots/messaging_screen.png" height="500" alt="screenshot">
+
 - This is where you chat.
 - Stay tuned for latest versions!
 
