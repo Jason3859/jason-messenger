@@ -1,42 +1,51 @@
-# chat
+# Messenger
 
-This project was created using the [Ktor Project Generator](https://start.ktor.io).
+A simple Messenger Application built with **Jetpack Compose** for android client.
 
-Here are some useful links to get you started:
+---
 
-- [Ktor Documentation](https://ktor.io/docs/home.html)
-- [Ktor GitHub page](https://github.com/ktorio/ktor)
-- The [Ktor Slack chat](https://app.slack.com/client/T09229ZC6/C0A974TJ9). You'll need to [request an invite](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) to join.
+## ✨ Features
 
-## Features
+- Light and Dark Modes
+- Send and receive messages
+- Persistent server side storage
 
-Here's a list of features included in this project:
+---
 
-| Name                                                                   | Description                                                                        |
-| ------------------------------------------------------------------------|------------------------------------------------------------------------------------ |
-| [Content Negotiation](https://start.ktor.io/p/content-negotiation)     | Provides automatic content conversion according to Content-Type and Accept headers |
-| [Routing](https://start.ktor.io/p/routing)                             | Provides a structured routing DSL                                                  |
-| [kotlinx.serialization](https://start.ktor.io/p/kotlinx-serialization) | Handles JSON serialization using kotlinx.serialization library                     |
-| [WebSockets](https://start.ktor.io/p/ktor-websockets)                  | Adds WebSocket protocol support for bidirectional client connections               |
+## Planned features (for future)
 
-## Building & Running
+- Desktop client support
 
-To build or run the project, use one of the following tasks:
+---
 
-| Task                          | Description                                                          |
-| -------------------------------|---------------------------------------------------------------------- |
-| `./gradlew test`              | Run the tests                                                        |
-| `./gradlew build`             | Build everything                                                     |
-| `buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
-| `buildImage`                  | Build the docker image to use with the fat JAR                       |
-| `publishImageToLocalRegistry` | Publish the docker image locally                                     |
-| `run`                         | Run the server                                                       |
-| `runDocker`                   | Run using the local docker image                                     |
+## How to use
+- Login/Signin first.
+- After that you will come to this screen ![](screenshots/chatroom.png)
+- Enter any unique id of your choice. Don't forget this because this is where your messages are saved. Share this with the person you want to chat with. You can also have a group chat.
+- After that you will come to this screen ![](screenshots/messaging_screen.png)
+- This is where you chat.
+- Stay tuned for latest versions!
 
-If the server starts successfully, you'll see the following output:
+---
 
+## 📦 Download
+
+To download the app, scroll down to the **Assets** section in the [Releases](https://github.com/Jason3859/jason-messenger/releases) tab and download the `.apk` file.
+
+---
+
+## 🚀 Getting Started (by cloning this repo)
+
+### Prerequisites
+
+- JDK 17+
+- Android Studio **Giraffe** or later OR IntelliJ IDEA
+- Gradle 8.x+
+- Android Emulator or physical device (API 27+)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/Jason3859/jason-messenger.git
+cd jason-messenger
 ```
-2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
-2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
-```
-
