@@ -34,6 +34,24 @@ A simple Messenger Application built with **Jetpack Compose** for android client
 
 ---
 
+## What does what?
+
+- If you click the <img src="https://raw.githubusercontent.com/Jason3859/jason-messenger/master/screenshots/info.png" height="500" alt="info"> icon in this screen,
+
+<img src="https://raw.githubusercontent.com/Jason3859/jason-messenger/master/screenshots/messaging_screen.png" height="500" alt="screenshot">
+
+It navigates to this screen
+
+<img src="https://raw.githubusercontent.com/Jason3859/jason-messenger/master/screenshots/info_screen.png" height="500" alt="screenshot">
+
+In this screen, 
+
+- `Disconnect from <your-room-id> disconnects you from the room`
+- `Delete Chatroom` button deletes the messages of this chatroom permanently. Messages might still be visible to other users when connected to the room while deleting, they will not be visible after you disconnect from room. This is because they are stored locally in the `viewmodel` of their device. They are cleared after they disconnect.
+- `Delete Account` button deletes your account.
+
+---
+
 ## 📦 Download
 
 To download the app, scroll down to the **Assets** section in the [Releases](https://github.com/Jason3859/jason-messenger/releases) tab and download the `.apk` file.
