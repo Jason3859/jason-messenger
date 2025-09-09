@@ -102,8 +102,8 @@ class MainViewModel(
                             _loginUiState.value.password
                         )
                     )
-                    _loginUiState.update { it.copy(isSuccessful = true) }
-                }
+                    login()
+                } else _loginUiState.update { it.copy(isError = true) }
             }
         }
     }
