@@ -37,3 +37,7 @@ out/
 
 messages.db
 local.properties
+/messenger-android/release/messenger-android-release.apk
+/messenger-android/release/baselineProfiles/0/messenger-android-release.dm
+/messenger-android/release/baselineProfiles/1/messenger-android-release.dm
+/messenger-android/release/output-metadata.json
