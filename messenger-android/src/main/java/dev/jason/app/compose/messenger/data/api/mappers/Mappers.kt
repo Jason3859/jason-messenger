@@ -1,13 +1,12 @@
 package dev.jason.app.compose.messenger.data.api.mappers
 
-import dev.jason.app.compose.messenger.data.api.MessageDto
-import dev.jason.app.compose.messenger.data.api.UserApiResponse
-import dev.jason.app.compose.messenger.data.api.UserDto
-import dev.jason.app.compose.messenger.data.database.mappers.toEntity
-import dev.jason.app.compose.messenger.data.database.mappers.toLocalDateTime
-import dev.jason.app.compose.messenger.data.database.mappers.toLong
-import dev.jason.app.compose.messenger.domain.api.User
-import dev.jason.app.compose.messenger.domain.database.Message
+import dev.jason.app.compose.messenger.data.api.model.MessageDto
+import dev.jason.app.compose.messenger.data.api.model.UserDto
+import dev.jason.app.compose.messenger.domain.model.Message
+import dev.jason.app.compose.messenger.domain.model.User
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 fun User.toDto() = UserDto(
     username, password
@@ -20,3 +19,7 @@ fun MessageDto.toDomain() = Message(
     message = message,
     timestamp = timestamp.toLocalDateTime()
 )
+
+fun Long.toLocalDateTime(): LocalDateTime {
+    return Instant.ofEpochSecond(this).atZone(ZoneId.systemDefault()).toLocalDateTime()
+}

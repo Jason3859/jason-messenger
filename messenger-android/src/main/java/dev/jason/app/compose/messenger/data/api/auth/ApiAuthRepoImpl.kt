@@ -1,19 +1,17 @@
-package dev.jason.app.compose.messenger.data.api
+package dev.jason.app.compose.messenger.data.api.auth
 
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import dev.jason.app.compose.messenger.data.api.mappers.toDto
+import dev.jason.app.compose.messenger.data.api.model.ChatroomDto
 import dev.jason.app.compose.messenger.domain.api.ApiAuthRepository
-import dev.jason.app.compose.messenger.domain.api.Result
-import dev.jason.app.compose.messenger.domain.api.User
-import dev.jason.app.compose.messenger.domain.database.Message
+import dev.jason.app.compose.messenger.domain.model.Result
+import dev.jason.app.compose.messenger.domain.model.User
 import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.websocket.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.UnknownHostException
@@ -32,17 +30,15 @@ class ApiAuthRepoImpl(
         val verified: Boolean,
     )
 
-    private lateinit var session: WebSocketSession
-
     override suspend fun signin(user: User): Result {
         return try {
             val request = client.post("$baseUrl/signup") {
                 contentType(ContentType.Application.Json)
-                setBody(Json.encodeToString(user.toDto()))
+                setBody(Json.Default.encodeToString(user.toDto()))
             }
             val response = request.bodyAsText()
             Log.d("Signup", response)
-            val serializedResponse = Json.decodeFromString<ApiResponse>(response)
+            val serializedResponse = Json.Default.decodeFromString<ApiResponse>(response)
             if (serializedResponse.username == "user already exists") {
                 Toast.makeText(
                     context,
@@ -67,11 +63,11 @@ class ApiAuthRepoImpl(
         return try {
             val request = client.post("$baseUrl/signin") {
                 contentType(ContentType.Application.Json)
-                setBody(Json.encodeToString(user.toDto()))
+                setBody(Json.Default.encodeToString(user.toDto()))
             }
             val response = request.bodyAsText()
             Log.d("signin", response)
-            val serializedResponse = Json.decodeFromString<ApiResponse>(response)
+            val serializedResponse = Json.Default.decodeFromString<ApiResponse>(response)
 
             if (serializedResponse.password == "invalid") {
                 Toast.makeText(context, "Invalid Password", Toast.LENGTH_LONG).show()
@@ -101,44 +97,44 @@ class ApiAuthRepoImpl(
         }
     }
 
-    override suspend fun connect(user: User, chatroomID: String): Result {
+    override suspend fun deleteAccount(user: User): Result {
         return try {
-            session = client.webSocketSession {
-                url("wss://jason-messenger.up.railway.app/chat/$chatroomID?userId=${user.username}&password=${user.password}")
+            client.delete("$baseUrl/delete-account") {
+                contentType(ContentType.Application.Json)
+                setBody(Json.encodeToString(user.toDto()))
             }
 
-            Log.d("ws", "Session initialized & connected")
-
-            for (frame in session.incoming) {
-                when (frame) {
-                    is Frame.Text -> {
-                        Log.d("ws", "Message: ${frame.readText()}")
-                    }
-
-                    is Frame.Close -> {
-                        Log.d("ws", "Closed by server")
-                    }
-
-                    else -> Log.d("ws", "error")
-                }
-            }
+            Toast.makeText(
+                context,
+                "Successfully deleted ${user.username}",
+                Toast.LENGTH_LONG
+            ).show()
 
             Result.Success
+
         } catch (e: Exception) {
-            Log.w("websocket", e.stackTraceToString())
+            e.printStackTrace()
             Result.Error(e)
         }
     }
 
+    override suspend fun deleteChatroom(chatroomId: String): Result {
+        return try {
+            client.delete("$baseUrl/delete-chatroom") {
+                contentType(ContentType.Application.Json)
+                setBody(Json.encodeToString(ChatroomDto(chatroomId)))
+            }
 
-    override suspend fun listenToMessages() {
-        for (frame in session.incoming) {
-            Log.d("ws message", (frame as? Frame.Text)?.readText() ?: "error")
+            Toast.makeText(
+                context,
+                "Successfully deleted $chatroomId",
+                Toast.LENGTH_LONG
+            ).show()
+
+            Result.Success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(e)
         }
-    }
-
-
-    override suspend fun sendMessage(message: Message) {
-        TODO()
     }
 }

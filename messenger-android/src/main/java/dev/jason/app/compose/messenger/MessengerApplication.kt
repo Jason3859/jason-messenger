@@ -1,17 +1,12 @@
 package dev.jason.app.compose.messenger
 
 import android.app.Application
-import androidx.room.Room
-import dev.jason.app.compose.messenger.data.api.ApiAuthRepoImpl
-import dev.jason.app.compose.messenger.data.api.ApiSocketImpl
-import dev.jason.app.compose.messenger.data.database.DbRepoImpl
-import dev.jason.app.compose.messenger.data.database.MessagesDao
-import dev.jason.app.compose.messenger.data.database.MessagesDatabase
+import dev.jason.app.compose.messenger.data.api.auth.ApiAuthRepoImpl
+import dev.jason.app.compose.messenger.data.api.socket.ApiSocketImpl
 import dev.jason.app.compose.messenger.data.saved_preferences.PrefsRepoImpl
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
 import dev.jason.app.compose.messenger.domain.api.ApiAuthRepository
 import dev.jason.app.compose.messenger.domain.api.ApiSocketRepository
-import dev.jason.app.compose.messenger.domain.database.DatabaseRepository
 import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
 import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
@@ -21,6 +16,7 @@ import io.ktor.client.plugins.*
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
@@ -32,25 +28,12 @@ class MessengerApplication : Application() {
     }
 
     enum class Qualifier {
-        MESSAGES_DAO, DATABASE_REPOSITORY, API_AUTH_REPOSITORY,
-        API_SOCKET_REPOSITORY, PREFS_REPOSITORY, KTOR_HTTP_CLIENT, OKHTTP_CLIENT,
-        PREFS_FILE, MAIN_VIEW_MODEL, CHAT_VIEW_MODEL, REPOSITORY_CONTAINER
+        API_AUTH_REPOSITORY, API_SOCKET_REPOSITORY, PREFS_REPOSITORY, KTOR_HTTP_CLIENT,
+        OKHTTP_CLIENT, PREFS_FILE, MAIN_VIEW_MODEL, CHAT_VIEW_MODEL, REPOSITORY_CONTAINER
     }
 
 
     private val applicationModule = module {
-        single<MessagesDao>(named(Qualifier.MESSAGES_DAO)) {
-            Room.databaseBuilder<MessagesDatabase>(
-                context = get(),
-                "messages.db"
-            )
-                .build()
-                .messagesDao()
-        }
-
-        single<DatabaseRepository>(named(Qualifier.DATABASE_REPOSITORY)) {
-            DbRepoImpl(get(named(Qualifier.MESSAGES_DAO)))
-        }
 
         single(named(Qualifier.OKHTTP_CLIENT)) {
             OkHttpClient()
@@ -89,24 +72,24 @@ class MessengerApplication : Application() {
 
         single<RepositoryContainer>(named(Qualifier.REPOSITORY_CONTAINER)) {
             object : RepositoryContainer {
-                override val databaseRepository: DatabaseRepository
-                    get() = get(named(Qualifier.DATABASE_REPOSITORY))
                 override val apiAuthRepository: ApiAuthRepository
                     get() = get(named(Qualifier.API_AUTH_REPOSITORY))
+
                 override val prefsRepository: PrefsRepository
                     get() = get(named(Qualifier.PREFS_REPOSITORY))
+
                 override val apiSocketRepository: ApiSocketRepository
                     get() = get(named(Qualifier.API_SOCKET_REPOSITORY))
             }
         }
 
-        single<ChatViewModel>(named(Qualifier.CHAT_VIEW_MODEL)) {
+        viewModel<ChatViewModel>(named(Qualifier.CHAT_VIEW_MODEL)) {
             ChatViewModel(
                 repositories = get(named(Qualifier.REPOSITORY_CONTAINER))
             )
         }
 
-        single<MainViewModel>(named(Qualifier.MAIN_VIEW_MODEL)) {
+        viewModel<MainViewModel>(named(Qualifier.MAIN_VIEW_MODEL)) {
             MainViewModel(
                 repositories = get(named(Qualifier.REPOSITORY_CONTAINER))
             )

@@ -1,4 +1,4 @@
-package dev.jason.app.compose.messenger.data.api
+package dev.jason.app.compose.messenger.data.api.model
 
 import kotlinx.serialization.Serializable
 

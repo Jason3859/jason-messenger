@@ -25,6 +25,7 @@ private const val POSITION_START_OFFSET_INNER_CIRCLE = 135f
 
 @Composable
 fun LoadingScreen(
+    text: String,
     loaded: Boolean,
     onLoaded: () -> Unit,
     error: Boolean,
@@ -47,7 +48,7 @@ fun LoadingScreen(
         modifier = modifier.fillMaxSize()
     ) {
         Text(
-            text = "Logging in",
+            text = text,
             fontSize = 20.sp
         )
         Column(
@@ -111,5 +112,5 @@ fun LoadingScreen(
 @Preview(showBackground = true)
 @Composable
 private fun LoadingPreview() {
-    LoadingScreen(false, {}, false, {})
+    LoadingScreen("",false, {}, false, {})
 }

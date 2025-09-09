@@ -1,7 +1,6 @@
 package dev.jason.app.compose.messenger
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,26 +17,32 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import dev.jason.app.compose.messenger.ui.MessageUi
+import dev.jason.app.compose.messenger.ui.model.MessageUi
+import dev.jason.app.compose.messenger.ui.model.toUi
 import dev.jason.app.compose.messenger.ui.nav.Routes
 import dev.jason.app.compose.messenger.ui.screen.*
 import dev.jason.app.compose.messenger.ui.theme.MessengerTheme
 import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
-import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.core.qualifier.named
-import java.net.UnknownHostException
-import java.time.ZoneId
 
 class MessengerActivity : ComponentActivity() {
+
+    private val mainViewModel by lazy {
+        getViewModel<MainViewModel>(named(MessengerApplication.Qualifier.MAIN_VIEW_MODEL))
+    }
+
+    private val chatViewModel by lazy {
+        getViewModel<ChatViewModel>(named(MessengerApplication.Qualifier.CHAT_VIEW_MODEL))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MessengerTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val mainViewModel = koinViewModel<MainViewModel>(named(MessengerApplication.Qualifier.MAIN_VIEW_MODEL))
-                    val chatViewModel = koinViewModel<ChatViewModel>(named(MessengerApplication.Qualifier.CHAT_VIEW_MODEL))
                     val navController = rememberNavController()
                     val loginUiState by mainViewModel.loginUiState.collectAsStateWithLifecycle()
                     val chatroomUiState by chatViewModel.chatroomUiState.collectAsStateWithLifecycle()
@@ -49,7 +54,7 @@ class MessengerActivity : ComponentActivity() {
                             chatRoomId = it.chatRoomId,
                             sender = it.sender,
                             text = it.message,
-                            timestamp = "${it.timestamp.atZone(ZoneId.systemDefault()).hour}:${it.timestamp.atZone(ZoneId.systemDefault()).minute}"
+                            timestamp = it.timestamp.toUi()
                         )
                     }
 
@@ -73,12 +78,8 @@ class MessengerActivity : ComponentActivity() {
                                     onUsernameChange = mainViewModel::updateUsername,
                                     onPasswordChange = mainViewModel::updatePassword,
                                     onLoginClick = {
-                                        Toast.makeText(
-                                            this@MessengerActivity,
-                                            "Logging in",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                         mainViewModel.login()
+                                        navController.navigate(Routes.LoginLoadingScreen)
                                     },
                                     onSigninClick = { navController.navigate(Routes.SigninScreen) },
                                     onLoggedIn = {
@@ -96,10 +97,9 @@ class MessengerActivity : ComponentActivity() {
                                     uiState = loginUiState,
                                     onUsernameChange = mainViewModel::updateUsername,
                                     onPasswordChange = mainViewModel::updatePassword,
-                                    onSigninClick = mainViewModel::signin,
-                                    onSignedIn = {
-                                        mainViewModel.login()
-                                        navController.navigate(Routes.EnterChatroomScreen) {
+                                    onSigninClick = {
+                                        mainViewModel.signin()
+                                        navController.navigate(Routes.LoginLoadingScreen) {
                                             popUpTo<Routes.SigninScreen> {
                                                 inclusive = true
                                             }
@@ -111,6 +111,7 @@ class MessengerActivity : ComponentActivity() {
 
                         composable<Routes.LoginLoadingScreen> {
                             LoadingScreen(
+                                text = "Logging in",
                                 loaded = loginUiState.isSuccessful,
                                 error = loginUiState.isError,
                                 onLoaded = {
@@ -127,14 +128,14 @@ class MessengerActivity : ComponentActivity() {
                                 username = loginUiState.username,
                                 uiState = chatroomUiState,
                                 onChatroomIdChange = chatViewModel::updateChatroomId,
-                                onConnectClick = chatViewModel::connect,
+                                onConnectClick = {
+                                    chatViewModel.connect()
+                                    navController.navigate(Routes.ConnectLoadingScreen)
+                                },
                                 onLogoutClick = {
                                     mainViewModel.logout()
-                                    navController.navigateUp()
-                                },
-                                onConnect = {
-                                    navController.navigate(Routes.MessageScreen) {
-                                        popUpTo<Routes.LoginLoadingScreen> {
+                                    navController.navigate(Routes.LoginScreen) {
+                                        popUpTo<Routes.EnterChatroomScreen> {
                                             inclusive = true
                                         }
                                     }
@@ -145,6 +146,18 @@ class MessengerActivity : ComponentActivity() {
                             )
                         }
 
+                        composable<Routes.ConnectLoadingScreen> {
+                            LoadingScreen(
+                                text = "Connecting to ${chatroomUiState.chatroomId}",
+                                loaded = chatroomUiState.isSuccessful,
+                                onLoaded = {
+                                    navController.navigate(Routes.MessageScreen)
+                                },
+                                error = false,
+                                onError = { }
+                            )
+                        }
+
                         composable<Routes.MessageScreen> {
                             MessagingScreen(
                                 messages = messagesUi,
@@ -152,7 +165,15 @@ class MessengerActivity : ComponentActivity() {
                                 message = message,
                                 onMessageValueChange = chatViewModel::updateMessage,
                                 onSend = chatViewModel::sendMessage,
-                                onInfoClick = { navController.navigate(Routes.InfoScreen) }
+                                onInfoClick = { navController.navigate(Routes.InfoScreen) },
+                                onBack = {
+                                    chatViewModel.disconnect()
+                                    navController.navigate(Routes.EnterChatroomScreen) {
+                                        popUpTo<Routes.MessageScreen> {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
                             )
                         }
 
@@ -161,16 +182,50 @@ class MessengerActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                val msg = if (loginUiState.error?.error?.cause is UnknownHostException) {
-                                    "No Internet!"
-                                } else loginUiState.error?.error?.localizedMessage
+                                val msg =
+                                    if (loginUiState.error?.error?.localizedMessage?.contains("resolve host") == true) {
+                                        "No Internet!"
+                                    } else loginUiState.error?.error?.localizedMessage
+
+                                if (msg == null) {
+                                    navController.navigateUp()
+                                }
 
                                 Text(msg ?: "Unknown error", fontSize = 20.sp)
                             }
                         }
 
                         composable<Routes.InfoScreen> {
-                            Text("Todo")
+                            InfoScreen(
+                                uiState = chatroomUiState,
+                                onBackClick = { navController.navigateUp() },
+                                onDeleteChatroomClick = {
+                                    chatViewModel.deleteChatroom()
+
+                                    navController.navigate(Routes.EnterChatroomScreen) {
+                                        popUpTo<Routes.InfoScreen> {
+                                            inclusive = true
+                                        }
+                                    }
+                                },
+                                onDeleteAccountClick = {
+                                    chatViewModel.deleteAccount()
+
+                                    navController.navigate(Routes.LoginNavigation) {
+                                        popUpTo<Routes.InfoScreen> {
+                                            inclusive = true
+                                        }
+                                    }
+                                },
+                                onBack = {
+                                    chatViewModel.disconnect()
+                                    navController.navigate(Routes.EnterChatroomScreen) {
+                                        popUpTo<Routes.InfoScreen> {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                 }

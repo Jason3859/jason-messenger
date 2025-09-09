@@ -3,8 +3,8 @@ package dev.jason.app.compose.messenger.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
-import dev.jason.app.compose.messenger.domain.api.Result
-import dev.jason.app.compose.messenger.domain.api.User
+import dev.jason.app.compose.messenger.domain.model.Result
+import dev.jason.app.compose.messenger.domain.model.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,6 +71,8 @@ class MainViewModel(
                         )
                     )
                     _loginUiState.update { it.copy(isSuccessful = true) }
+                } else {
+                    _loginUiState.update { it.copy(isError = true) }
                 }
             }
         }
@@ -94,6 +96,12 @@ class MainViewModel(
                 )
             ).apply {
                 if (this is Result.Success) {
+                    repositories.prefsRepository.saveUser(
+                        User(
+                            _loginUiState.value.username,
+                            _loginUiState.value.password
+                        )
+                    )
                     _loginUiState.update { it.copy(isSuccessful = true) }
                 }
             }

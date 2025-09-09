@@ -1,6 +1,8 @@
 package dev.jason.app.compose.messenger.domain.api
 
-import dev.jason.app.compose.messenger.domain.database.Message
+import dev.jason.app.compose.messenger.domain.model.Message
+import dev.jason.app.compose.messenger.domain.model.Result
+import dev.jason.app.compose.messenger.domain.model.User
 import kotlinx.coroutines.flow.SharedFlow
 
 interface ApiSocketRepository {

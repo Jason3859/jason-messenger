@@ -1,7 +1,7 @@
 package dev.jason.app.compose.messenger.data.saved_preferences
 
-import dev.jason.app.compose.messenger.domain.api.User
-import dev.jason.app.compose.messenger.domain.saved_preferences.Preferences
+import dev.jason.app.compose.messenger.domain.model.User
+import dev.jason.app.compose.messenger.domain.model.Preferences
 import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

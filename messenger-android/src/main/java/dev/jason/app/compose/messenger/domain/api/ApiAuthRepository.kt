@@ -1,11 +1,11 @@
 package dev.jason.app.compose.messenger.domain.api
 
-import dev.jason.app.compose.messenger.domain.database.Message
+import dev.jason.app.compose.messenger.domain.model.Result
+import dev.jason.app.compose.messenger.domain.model.User
 
 interface ApiAuthRepository {
     suspend fun signin(user: User): Result
     suspend fun login(user: User): Result
-    suspend fun connect(user: User, chatroomID: String): Result
-    suspend fun sendMessage(message: Message)
-    suspend fun listenToMessages()
+    suspend fun deleteAccount(user: User): Result
+    suspend fun deleteChatroom(chatroomId: String): Result
 }

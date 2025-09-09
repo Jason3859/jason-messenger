@@ -1,21 +1,21 @@
 package dev.jason.app.compose.messenger.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import dev.jason.app.compose.messenger.R
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
 
 @Composable
@@ -24,9 +24,10 @@ fun SigninScreen(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSigninClick: () -> Unit,
-    onSignedIn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
@@ -37,34 +38,95 @@ fun SigninScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TextField(
+            var showPassword by remember { mutableStateOf(false) }
+
+            var password by remember { mutableStateOf("") }
+
+            OutlinedTextField(
                 value = uiState.username,
                 onValueChange = onUsernameChange,
                 placeholder = { Text("Enter your username") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                singleLine = true
+                singleLine = true,
+                modifier = modifier.fillMaxWidth(0.9f),
+                shape = RoundedCornerShape(percent = 25)
             )
 
-            TextField(
+            Spacer(modifier.height(15.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                placeholder = { Text("Enter your password") },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                singleLine = true,
+                modifier = modifier.fillMaxWidth(0.9f),
+                shape = RoundedCornerShape(percent = 25),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            showPassword = !showPassword
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (showPassword) R.drawable.ic_visibility_off else R.drawable.ic_visibility_on
+                            ),
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+
+            Spacer(modifier.height(15.dp))
+
+            OutlinedTextField(
                 value = uiState.password,
                 onValueChange = onPasswordChange,
-                placeholder = { Text("Enter your password") },
+                placeholder = { Text("Reenter your password") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardActions = KeyboardActions(
                     onDone = { onSigninClick() }
-                )
+                ),
+                modifier = modifier.fillMaxWidth(0.9f),
+                shape = RoundedCornerShape(percent = 25),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            showPassword = !showPassword
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (showPassword) R.drawable.ic_visibility_off else R.drawable.ic_visibility_on
+                            ),
+                            contentDescription = null
+                        )
+                    }
+                }
             )
 
+            Spacer(modifier.height(15.dp))
+
             Button(
-                onClick = onSigninClick
+                onClick = {
+                    if (password != uiState.password) {
+                        Toast.makeText(
+                            context,
+                            "Passwords did not match",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@Button
+                    }
+
+                    onSigninClick()
+                },
+                modifier = modifier.fillMaxWidth(0.9f)
             ) {
                 Text("Signin")
-            }
-
-            if (uiState.isSuccessful) {
-                onSignedIn()
             }
         }
     }

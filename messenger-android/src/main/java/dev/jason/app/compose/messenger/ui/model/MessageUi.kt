@@ -1,4 +1,4 @@
-package dev.jason.app.compose.messenger.ui
+package dev.jason.app.compose.messenger.ui.model
 
 data class MessageUi(
     val id: Long,

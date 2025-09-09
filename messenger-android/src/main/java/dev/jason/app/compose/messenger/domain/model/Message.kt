@@ -1,4 +1,4 @@
-package dev.jason.app.compose.messenger.domain.database
+package dev.jason.app.compose.messenger.domain.model
 
 import java.time.LocalDateTime
 

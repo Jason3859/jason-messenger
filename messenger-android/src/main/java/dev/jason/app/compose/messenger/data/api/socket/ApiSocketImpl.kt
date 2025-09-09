@@ -1,19 +1,16 @@
-package dev.jason.app.compose.messenger.data.api
+package dev.jason.app.compose.messenger.data.api.socket
 
 import dev.jason.app.compose.messenger.data.api.mappers.toDomain
+import dev.jason.app.compose.messenger.data.api.model.MessageDto
 import dev.jason.app.compose.messenger.domain.api.ApiSocketRepository
-import dev.jason.app.compose.messenger.domain.api.Result
-import dev.jason.app.compose.messenger.domain.api.User
-import dev.jason.app.compose.messenger.domain.database.Message
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import dev.jason.app.compose.messenger.domain.model.Message
+import dev.jason.app.compose.messenger.domain.model.Result
+import dev.jason.app.compose.messenger.domain.model.User
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
 import okhttp3.*
-import okhttp3.Response
 
 class ApiSocketImpl(
     private val client: OkHttpClient,
@@ -30,6 +27,21 @@ class ApiSocketImpl(
             .url("wss://jason-messenger.up.railway.app/chat/$chatroomId?userId=${user.username}&password=${user.password}")
             .build()
 
+        val messagesRequest = Request.Builder()
+            .url("https://jason-messenger.up.railway.app/get-messages/$chatroomId")
+            .build()
+
+        val job = coroutineScope.launch {
+            val request = client.newCall(messagesRequest).execute()
+            val response = request.body
+
+            val deserialized = json.decodeFromString<List<MessageDto>>(response?.string() ?: return@launch)
+
+            deserialized.forEach {
+                messages.emit(it.toDomain())
+            }
+        }
+
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 socket = webSocket
@@ -40,8 +52,10 @@ class ApiSocketImpl(
             override fun onMessage(webSocket: WebSocket, text: String) {
                 try {
                     val messageDto = json.decodeFromString<MessageDto>(text)
-                    println(messageDto)
                     coroutineScope.launch {
+                        while (!job.isCompleted) {
+                            delay(10)
+                        }
                         messages.emit(messageDto.toDomain())
                     }
                 } catch (e: Exception) {

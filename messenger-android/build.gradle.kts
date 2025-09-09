@@ -1,10 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.plugin.serialization)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.room)
 }
 
 val packageName = "dev.jason.app.compose.messenger"
@@ -33,16 +33,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
     }
 }
 
-room {
-    schemaDirectory("$projectDir/schema")
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_11
+    }
 }
 
 dependencies {
@@ -63,9 +62,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-    implementation(libs.room.runtime)
-    implementation(libs.room.runtime.android)
-    ksp(libs.room.compiler)
     implementation(libs.androidx.compose.navigation)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
