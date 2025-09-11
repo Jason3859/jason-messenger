@@ -46,6 +46,10 @@ class PrefsRepoImpl : PrefsRepository {
         } else null
     }
 
+    override suspend fun deleteUser() {
+        userFile.writeText("")
+    }
+
     override suspend fun saveRoom(roomId: String) {
         roomFile.writeText(Json.encodeToString(RoomPref(roomId)))
     }
@@ -54,6 +58,10 @@ class PrefsRepoImpl : PrefsRepository {
         return if (roomFile.readText().isNotBlank()) {
             Json.decodeFromString<RoomPref>(roomFile.readText()).roomId
         } else null
+    }
+
+    override suspend fun deleteRoom() {
+        roomFile.writeText("")
     }
 
     private fun User.toPref() = UserPref(this.username, this.password)

@@ -10,13 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import dev.jason.app.compose.desktop.messenger.ui.viewmodel.ChatViewModel
+import dev.jason.app.compose.desktop.messenger.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnterRoomIdScreen(
     username: String,
-    uiState: ChatViewModel.ChatroomUiState,
+    uiState: MainViewModel.ChatroomUiState,
     onChatroomIdChange: (String) -> Unit,
     onConnectClick: () -> Unit,
     onLogoutClick: () -> Unit,

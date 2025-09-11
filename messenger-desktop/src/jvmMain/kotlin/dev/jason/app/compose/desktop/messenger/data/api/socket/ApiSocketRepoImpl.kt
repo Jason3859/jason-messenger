@@ -54,7 +54,6 @@ class ApiSocketRepoImpl(private val client: OkHttpClient) : ApiSocketRepository 
                         while (!job.isCompleted) {
                             delay(10)
                         }
-                        println(messageDto)
                         messages.emit(messageDto.toDomain())
                     }
                 } catch (e: Exception) {

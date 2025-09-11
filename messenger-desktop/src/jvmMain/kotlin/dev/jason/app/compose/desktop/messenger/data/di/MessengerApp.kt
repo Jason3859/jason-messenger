@@ -7,23 +7,25 @@ import dev.jason.app.compose.desktop.messenger.domain.RepositoryContainer
 import dev.jason.app.compose.desktop.messenger.domain.api.ApiAuthRepository
 import dev.jason.app.compose.desktop.messenger.domain.api.ApiSocketRepository
 import dev.jason.app.compose.desktop.messenger.domain.prefs.PrefsRepository
-import dev.jason.app.compose.desktop.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.desktop.messenger.ui.viewmodel.MainViewModel
 import okhttp3.OkHttpClient
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.util.concurrent.TimeUnit
 
 object MessengerApp {
     enum class Qualifier {
         HTTP_CLIENT, REPOSITORY_CONTAINER, MAIN_VIEW_MODEL,
-        API_AUTH_REPO, PREFS_REPO, API_SOCKET_REPO, CHAT_VIEW_MODEL
+        API_AUTH_REPO, PREFS_REPO, API_SOCKET_REPO
     }
 
     private val module = module {
 
         single<OkHttpClient>(named(Qualifier.HTTP_CLIENT)) {
-            OkHttpClient()
+            OkHttpClient.Builder()
+                .pingInterval(30, TimeUnit.SECONDS)
+                .build()
         }
 
         single<RepositoryContainer>(named(Qualifier.REPOSITORY_CONTAINER)) {
@@ -53,10 +55,6 @@ object MessengerApp {
 
         single<MainViewModel>(named(Qualifier.MAIN_VIEW_MODEL)) {
             MainViewModel(get<RepositoryContainer>(named(Qualifier.REPOSITORY_CONTAINER)))
-        }
-
-        single<ChatViewModel>(named(Qualifier.CHAT_VIEW_MODEL)) {
-            ChatViewModel(get<RepositoryContainer>(named(Qualifier.REPOSITORY_CONTAINER)))
         }
     }
 

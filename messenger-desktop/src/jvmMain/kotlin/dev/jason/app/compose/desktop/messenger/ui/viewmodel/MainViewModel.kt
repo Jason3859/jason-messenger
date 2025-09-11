@@ -3,6 +3,7 @@ package dev.jason.app.compose.desktop.messenger.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jason.app.compose.desktop.messenger.domain.RepositoryContainer
+import dev.jason.app.compose.desktop.messenger.domain.model.Message
 import dev.jason.app.compose.desktop.messenger.domain.model.Result
 import dev.jason.app.compose.desktop.messenger.domain.model.User
 import dev.jason.app.compose.desktop.messenger.ui.nav.Routes
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
-open class MainViewModel(private val repositories: RepositoryContainer) : ViewModel() {
+class MainViewModel(private val repositories: RepositoryContainer) : ViewModel() {
 
     data class LoginUiState(
         val username: String = "",
@@ -27,8 +28,11 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
     private val _loginUiState = MutableStateFlow(LoginUiState())
     val loginUiState = _loginUiState.asStateFlow()
 
-    protected val destination = MutableStateFlow<Routes>(Routes.LoginScreen)
-    val startDestination = destination.asStateFlow()
+    private val _startDestination = MutableStateFlow<Routes>(Routes.LoginScreen)
+    val startDestination = _startDestination.asStateFlow()
+
+    private val _currentDestination = MutableStateFlow<Routes>(_startDestination.value)
+    val currentDestination = _currentDestination.asStateFlow()
 
     fun updateUsername(username: String) {
         _loginUiState.update {
@@ -59,6 +63,7 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
                 )
             ).apply {
                 if (this is Result.Success) {
+                    _currentDestination.update { Routes.SigninLoadingScreen }
                     login()
                 }
 
@@ -95,6 +100,8 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
 
             delay(1.seconds)
 
+            _currentDestination.update { Routes.LoginLoadingScreen }
+
             repositories.apiAuthRepository.login(
                 user = User(
                     username = _loginUiState.value.username,
@@ -115,9 +122,11 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
                         )
                     }
 
-                    destination.update {
+                    _startDestination.update {
                         Routes.EnterRoomIdScreen
                     }
+
+                    _currentDestination.update { Routes.EnterRoomIdScreen }
                 }
 
                 if (this is Result.InvalidPassword) {
@@ -152,12 +161,19 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
         }
     }
 
+    fun logout() {
+        viewModelScope.launch {
+            repositories.prefsRepository.deleteUser()
+            _currentDestination.update { Routes.LoginScreen }
+        }
+    }
+
     private fun loginWithSavedUser() {
         val user = repositories.prefsRepository.getUser()
         if (user == null) {
             return
         }
-        destination.update { Routes.LoginLoadingScreen }
+        _startDestination.update { Routes.LoginLoadingScreen }
         _loginUiState.update {
             it.copy(
                 username = user.username,
@@ -167,8 +183,116 @@ open class MainViewModel(private val repositories: RepositoryContainer) : ViewMo
         login()
     }
 
+    data class ChatroomUiState(
+        val roomId: String = "",
+        val isSuccessful: Boolean = false,
+        val isAccountDeleteSuccessful: Boolean = false,
+        val isChatroomDeleteSuccessful: Boolean = false,
+    )
+
+    private val _uiState = MutableStateFlow(ChatroomUiState())
+    val chatroomUiState = _uiState.asStateFlow()
+
+    private val _messages = MutableStateFlow(listOf<Message>())
+    val messages = _messages.asStateFlow()
+
     init {
         loginWithSavedUser()
+        connectWithSavedRoomId()
+
+        viewModelScope.launch {
+            repositories.apiSocketRepository.getMessages().collect { message ->
+                _messages.update { current ->
+                    current + message
+                }
+            }
+        }
+    }
+
+    private fun connectWithSavedRoomId() {
+        repositories.prefsRepository.getRoom().apply {
+            if (this != null) {
+                _uiState.update {
+                    it.copy(
+                        roomId = this
+                    )
+                }
+                connect()
+            }
+        }
+    }
+
+    fun updateRoomId(roomId: String) {
+        _uiState.update {
+            it.copy(
+                roomId = roomId
+            )
+        }
+    }
+
+    fun connect() {
+        viewModelScope.launch {
+            if (_uiState.value.roomId.isEmpty() || _uiState.value.roomId.isBlank()) {
+                SnackbarController.sendWarning("Room Id cannot be empty.")
+                return@launch
+            }
+
+            if (_uiState.value.roomId.contains(' ')) {
+                SnackbarController.sendWarning("Room Id cannot contain spaces.")
+                return@launch
+            }
+
+            _currentDestination.update { Routes.ConnectLoadingScreen }
+
+            repositories.apiSocketRepository.connect(
+                user = repositories.prefsRepository.getUser()!!,
+                roomId = _uiState.value.roomId
+            ).apply {
+                if (this is Result.Success) {
+                    repositories.prefsRepository.saveRoom(_uiState.value.roomId)
+
+                    _uiState.update {
+                        it.copy(
+                            isSuccessful = true
+                        )
+                    }
+
+                    _currentDestination.update { Routes.MessagingScreen }
+                }
+
+                if (this is Result.Error) {
+                    SnackbarController.sendResult(this)
+                }
+            }
+        }
+    }
+
+    fun disconnect() {
+        viewModelScope.launch {
+            repositories.apiSocketRepository.closeSession()
+            repositories.prefsRepository.deleteRoom()
+        }
+    }
+
+    private val _message = MutableStateFlow("")
+    val message = _message.asStateFlow()
+
+    fun updateMessage(message: String) {
+        _message.update {
+            message
+        }
+    }
+
+    fun sendMessage() {
+        viewModelScope.launch {
+            if (_message.value.isEmpty() || _message.value.isBlank()) {
+                SnackbarController.sendWarning("Message cannot be empty.")
+                return@launch
+            }
+
+            repositories.apiSocketRepository.sendMessage(_message.value)
+            _message.update { "" }
+        }
     }
 
 }
