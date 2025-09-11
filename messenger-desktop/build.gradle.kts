@@ -35,7 +35,7 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "dev.jason.app.compose.messenger.MainKt"
+        mainClass = "dev.jason.app.compose.desktop.messenger.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
