@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.hot.reload)
+    alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 kotlin {
@@ -22,6 +23,11 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.navigation.compose)
+            implementation(libs.koin.compose)
+            implementation(libs.okhttp)
+            implementation(compose.materialIconsExtended)
         }
     }
 }
