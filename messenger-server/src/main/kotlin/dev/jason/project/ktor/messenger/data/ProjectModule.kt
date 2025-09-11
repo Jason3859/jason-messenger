@@ -5,7 +5,6 @@ import dev.jason.project.ktor.messenger.data.database.UsersDatabaseRepository
 import dev.jason.project.ktor.messenger.domain.DatabaseRepository
 import dev.jason.project.ktor.messenger.domain.UserRepository
 import org.koin.dsl.module
-import java.net.InetAddress
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -17,10 +16,6 @@ val projectModule = module {
         ).also {
             it.createStatement().use { stmt ->
                 stmt.execute("SET TIMEZONE TO 'Asia/Kolkata'")
-            }
-
-            InetAddress.getByName("db.wybspetuojavvbpqyewv.supabase.co").also {
-                println("Supabase resolves to: ${it.hostAddress}")
             }
         }
     }
