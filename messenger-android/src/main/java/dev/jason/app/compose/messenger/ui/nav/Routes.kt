@@ -13,4 +13,5 @@ sealed interface Routes {
     @Serializable data object ConnectLoadingScreen : Routes
     @Serializable data object MessageScreen : Routes
     @Serializable data object ErrorScreen : Routes
+    @Serializable data object OutDatedVersionScreen : Routes
 }

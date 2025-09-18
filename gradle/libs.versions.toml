@@ -23,6 +23,7 @@ android-nav = "2.9.3"
 composeHotReload = "1.0.0-beta06"
 composeMultiplatform = "1.8.2"
 kotlinx-coroutines = "1.10.2"
+dynamic-theme = "2.0.0"
 
 [libraries]
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor-version" }
@@ -61,6 +62,7 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+dynamic-material-theme = { module = "io.github.jason3859:dynamic-material-theme", version.ref = "dynamic-theme" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

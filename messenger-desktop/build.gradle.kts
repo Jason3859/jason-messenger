@@ -28,6 +28,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.okhttp)
             implementation(compose.materialIconsExtended)
+            implementation(libs.dynamic.material.theme)
         }
     }
 }
@@ -40,7 +41,11 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Messenger"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
+
+            windows {
+                shortcut = true
+            }
         }
     }
 }

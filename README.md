@@ -4,17 +4,18 @@ A simple Messenger Application built with **Jetpack Compose** for android client
 
 ---
 
+## Whats new?
+
+- Now supports desktop app (`windows`).
+- Client (both `android` and `windows`) now checks for latest version.
+
+---
+
 ## ✨ Features
 
 - Light and Dark Modes
 - Send and receive messages
 - Persistent server side storage
-
----
-
-## Planned features (for future)
-
-- Desktop client support
 
 ---
 

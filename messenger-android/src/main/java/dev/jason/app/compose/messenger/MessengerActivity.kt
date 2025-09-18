@@ -1,16 +1,31 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package dev.jason.app.compose.messenger
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -20,7 +35,12 @@ import androidx.navigation.navigation
 import dev.jason.app.compose.messenger.ui.model.MessageUi
 import dev.jason.app.compose.messenger.ui.model.toUi
 import dev.jason.app.compose.messenger.ui.nav.Routes
-import dev.jason.app.compose.messenger.ui.screen.*
+import dev.jason.app.compose.messenger.ui.screen.EnterChatroomScreen
+import dev.jason.app.compose.messenger.ui.screen.InfoScreen
+import dev.jason.app.compose.messenger.ui.screen.LoadingScreen
+import dev.jason.app.compose.messenger.ui.screen.LoginScreen
+import dev.jason.app.compose.messenger.ui.screen.MessagingScreen
+import dev.jason.app.compose.messenger.ui.screen.SigninScreen
 import dev.jason.app.compose.messenger.ui.theme.MessengerTheme
 import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
@@ -63,6 +83,12 @@ class MessengerActivity : ComponentActivity() {
 
                     if (savedPrefs.user?.username != null) {
                         startDestination = Routes.LoginLoadingScreen
+                    }
+
+                    LaunchedEffect(true) {
+                        if (!mainViewModel.isVersionLatest()) {
+                            startDestination = Routes.OutDatedVersionScreen
+                        }
                     }
 
                     NavHost(
@@ -226,6 +252,44 @@ class MessengerActivity : ComponentActivity() {
                                     }
                                 }
                             )
+                        }
+
+                        composable<Routes.OutDatedVersionScreen> {
+                            Scaffold(
+                                modifier = Modifier.fillMaxSize(),
+                                topBar = {
+                                    TopAppBar(
+                                        title = {
+                                            Text("Outdated version")
+                                        }
+                                    )
+                                }
+                            ) { paddingValues ->
+
+                                val uriHandler = LocalUriHandler.current
+
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(paddingValues)
+                                        .padding(horizontal = 50.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "The current version of this app you are using is outdated. \nPlease download the latest version of this app by clicking this button.",
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                    Button(
+                                        onClick = {
+                                            uriHandler.openUri("https://github.com/Jason3859/jason-messenger/releases/download/v1.1.0/messenger-android-release.apk")
+                                        }
+                                    ) {
+                                        Text("Click to download the latest version")
+                                    }
+                                }
+                            }
                         }
                     }
                 }

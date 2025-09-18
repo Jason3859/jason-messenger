@@ -27,7 +27,7 @@ object SnackbarController {
         _events.emit(value)
     }
 
-    suspend fun sendWarning(warning: String) {
-        _events.emit(warning)
+    suspend fun sendMessage(message: String) {
+        _events.emit(message)
     }
 }

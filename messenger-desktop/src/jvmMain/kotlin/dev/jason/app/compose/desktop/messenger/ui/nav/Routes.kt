@@ -10,4 +10,6 @@ sealed interface Routes {
     @Serializable data object EnterRoomIdScreen : Routes
     @Serializable data object ConnectLoadingScreen : Routes
     @Serializable data object MessagingScreen : Routes
+    @Serializable data object InfoScreen : Routes
+    @Serializable data object UpdateScreen : Routes
 }

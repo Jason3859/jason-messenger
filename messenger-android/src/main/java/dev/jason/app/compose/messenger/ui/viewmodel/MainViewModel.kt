@@ -47,6 +47,26 @@ class MainViewModel(
         }
     }
 
+    companion object {
+        const val CURRENT_VERSION = "1.1.0"
+    }
+
+    private var version: String? = null
+
+    suspend fun isVersionLatest(): Boolean {
+        val job = viewModelScope.launch {
+            repositories.versionCheckRepository.getVersion().apply {
+                this@MainViewModel.version = this
+            }
+        }
+
+        while (!job.isCompleted) {
+            delay(10L)
+        }
+
+        return (version == CURRENT_VERSION).also { println("is latest: $it") }
+    }
+
     fun updateUsername(username: String) {
         _loginUiState.update { it.copy(username) }
     }

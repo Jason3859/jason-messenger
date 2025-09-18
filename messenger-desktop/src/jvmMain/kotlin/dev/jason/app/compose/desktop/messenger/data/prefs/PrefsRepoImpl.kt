@@ -9,15 +9,15 @@ import java.io.File
 class PrefsRepoImpl : PrefsRepository {
 
     @Serializable
-    data class UserPref(
+    private data class UserPref(
         val username: String,
         val password: String,
     )
 
     @Serializable
-    data class RoomPref(val roomId: String)
+    private data class RoomPref(val roomId: String)
 
-    private val parent = File("res")
+    private val parent = File(System.getProperty("user.home"), "messenger-desktop")
 
     private val userFile = File(parent, "user.json")
     private val roomFile = File(parent, "room.json")

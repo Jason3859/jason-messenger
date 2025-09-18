@@ -3,16 +3,18 @@ package dev.jason.app.compose.messenger
 import android.app.Application
 import dev.jason.app.compose.messenger.data.api.auth.ApiAuthRepoImpl
 import dev.jason.app.compose.messenger.data.api.socket.ApiSocketImpl
+import dev.jason.app.compose.messenger.data.api.version.VersionCheckRepoImpl
 import dev.jason.app.compose.messenger.data.saved_preferences.PrefsRepoImpl
 import dev.jason.app.compose.messenger.domain.RepositoryContainer
 import dev.jason.app.compose.messenger.domain.api.ApiAuthRepository
 import dev.jason.app.compose.messenger.domain.api.ApiSocketRepository
+import dev.jason.app.compose.messenger.domain.api.VersionCheckRepository
 import dev.jason.app.compose.messenger.domain.saved_preferences.PrefsRepository
 import dev.jason.app.compose.messenger.ui.viewmodel.ChatViewModel
 import dev.jason.app.compose.messenger.ui.viewmodel.MainViewModel
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -29,7 +31,7 @@ class MessengerApplication : Application() {
 
     enum class Qualifier {
         API_AUTH_REPOSITORY, API_SOCKET_REPOSITORY, PREFS_REPOSITORY, KTOR_HTTP_CLIENT,
-        OKHTTP_CLIENT, PREFS_FILE, MAIN_VIEW_MODEL, CHAT_VIEW_MODEL, REPOSITORY_CONTAINER
+        OKHTTP_CLIENT, PREFS_FILE, MAIN_VIEW_MODEL, CHAT_VIEW_MODEL, REPOSITORY_CONTAINER, VERSION_CHECK_REPO
     }
 
 
@@ -52,6 +54,10 @@ class MessengerApplication : Application() {
                 client = get(named(Qualifier.KTOR_HTTP_CLIENT)),
                 context = androidContext()
             )
+        }
+
+        single<VersionCheckRepository>(named(Qualifier.VERSION_CHECK_REPO)) {
+            VersionCheckRepoImpl(get(named(Qualifier.KTOR_HTTP_CLIENT)))
         }
 
         single<File>(named(Qualifier.PREFS_FILE)) {
@@ -80,6 +86,9 @@ class MessengerApplication : Application() {
 
                 override val apiSocketRepository: ApiSocketRepository
                     get() = get(named(Qualifier.API_SOCKET_REPOSITORY))
+
+                override val versionCheckRepository: VersionCheckRepository
+                    get() = get(named(Qualifier.VERSION_CHECK_REPO))
             }
         }
 

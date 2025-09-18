@@ -13,9 +13,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.awt.Desktop
+import java.net.URI
+import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
 
 class MainViewModel(private val repositories: RepositoryContainer) : ViewModel() {
+
+    companion object {
+        const val CURRENT_VERSION = "1.1.0"
+    }
 
     data class LoginUiState(
         val username: String = "",
@@ -65,6 +72,7 @@ class MainViewModel(private val repositories: RepositoryContainer) : ViewModel()
                 if (this is Result.Success) {
                     _currentDestination.update { Routes.SigninLoadingScreen }
                     login()
+                    return@apply
                 }
 
                 if (this is Result.Error) {
@@ -197,10 +205,17 @@ class MainViewModel(private val repositories: RepositoryContainer) : ViewModel()
     val messages = _messages.asStateFlow()
 
     init {
-        loginWithSavedUser()
-        connectWithSavedRoomId()
-
         viewModelScope.launch {
+            repositories.versionCheckRepository.getVersion().apply {
+                if (this != CURRENT_VERSION) {
+                    _currentDestination.update { Routes.UpdateScreen }
+                    println("Not the latest version. current: $CURRENT_VERSION, latest: $this")
+                    return@launch
+                }
+            }
+
+            loginWithSavedUser()
+            connectWithSavedRoomId()
             repositories.apiSocketRepository.getMessages().collect { message ->
                 _messages.update { current ->
                     current + message
@@ -233,12 +248,12 @@ class MainViewModel(private val repositories: RepositoryContainer) : ViewModel()
     fun connect() {
         viewModelScope.launch {
             if (_uiState.value.roomId.isEmpty() || _uiState.value.roomId.isBlank()) {
-                SnackbarController.sendWarning("Room Id cannot be empty.")
+                SnackbarController.sendMessage("Room Id cannot be empty.")
                 return@launch
             }
 
             if (_uiState.value.roomId.contains(' ')) {
-                SnackbarController.sendWarning("Room Id cannot contain spaces.")
+                SnackbarController.sendMessage("Room Id cannot contain spaces.")
                 return@launch
             }
 
@@ -286,12 +301,46 @@ class MainViewModel(private val repositories: RepositoryContainer) : ViewModel()
     fun sendMessage() {
         viewModelScope.launch {
             if (_message.value.isEmpty() || _message.value.isBlank()) {
-                SnackbarController.sendWarning("Message cannot be empty.")
+                SnackbarController.sendMessage("Message cannot be empty.")
                 return@launch
             }
 
             repositories.apiSocketRepository.sendMessage(_message.value)
             _message.update { "" }
+        }
+    }
+
+    fun deleteAccount() {
+        viewModelScope.launch {
+            repositories.prefsRepository.apply {
+                repositories.apiAuthRepository.deleteAccount(this.getUser()!!)
+                deleteRoom()
+                deleteUser()
+            }
+
+            _currentDestination.update { Routes.LoginScreen }
+        }
+    }
+
+    fun deleteRoom() {
+        viewModelScope.launch {
+            disconnect()
+            repositories.prefsRepository.apply {
+                repositories.apiAuthRepository.deleteChatroom(this.getRoom()!!)
+                deleteRoom()
+            }
+            _currentDestination.update { Routes.EnterRoomIdScreen }
+        }
+    }
+
+    fun openInBrowser(uri: URI) {
+        val osName by lazy(LazyThreadSafetyMode.NONE) { System.getProperty("os.name").lowercase(Locale.getDefault()) }
+        val desktop = Desktop.getDesktop()
+        when {
+            Desktop.isDesktopSupported() && desktop.isSupported(Desktop.Action.BROWSE) -> desktop.browse(uri)
+            "mac" in osName -> Runtime.getRuntime().exec(arrayOf("open $uri"))
+            "nix" in osName || "nux" in osName -> Runtime.getRuntime().exec(arrayOf("xdg-open $uri"))
+            else -> throw RuntimeException("cannot open $uri")
         }
     }
 

@@ -1,5 +1,6 @@
 package dev.jason.app.compose.desktop.messenger.data.api.auth
 
+import dev.jason.app.compose.desktop.messenger.data.api.model.ChatroomDto
 import dev.jason.app.compose.desktop.messenger.data.api.model.UserDto
 import dev.jason.app.compose.desktop.messenger.domain.api.ApiAuthRepository
 import dev.jason.app.compose.desktop.messenger.domain.model.Result
@@ -46,7 +47,7 @@ class AuthApiRepoImpl(private val client: OkHttpClient) : ApiAuthRepository {
                 } else {
                     Result.Error(null)
                 }
-            }
+            }.also { body.close() }
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(e)
@@ -75,7 +76,7 @@ class AuthApiRepoImpl(private val client: OkHttpClient) : ApiAuthRepository {
                 } else {
                     Result.Success
                 }
-            }
+            }.also { body.close() }
         } catch (e: Exception) {
             e.printStackTrace()
             Result.Error(e)
@@ -83,10 +84,38 @@ class AuthApiRepoImpl(private val client: OkHttpClient) : ApiAuthRepository {
     }
 
     override suspend fun deleteAccount(user: User): Result {
-        TODO("Not yet implemented")
+        return try {
+            val request = Request.Builder()
+                .url("$BASE_URL/delete-account")
+                .delete(
+                    Json.encodeToString(UserDto(user.username, user.password))
+                        .toRequestBody("application/json".toMediaTypeOrNull())
+                )
+                .build()
+
+            client.newCall(request).execute()
+            Result.Success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(e)
+        }
     }
 
     override suspend fun deleteChatroom(chatroomId: String): Result {
-        TODO("Not yet implemented")
+        return try {
+            val request = Request.Builder()
+                .url("$BASE_URL/delete-chatroom")
+                .delete(
+                    Json.encodeToString(ChatroomDto(chatroomId))
+                        .toRequestBody("application/json".toMediaTypeOrNull())
+                )
+                .build()
+
+            client.newCall(request).execute()
+            Result.Success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(e)
+        }
     }
 }
