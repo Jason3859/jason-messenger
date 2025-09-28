@@ -10,6 +10,13 @@ version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
+    tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+        mergeServiceFiles()
+        archiveClassifier.set("")
+    }
+    tasks.withType<JavaExec> {
+        jvmArgs = listOf("-Duser.timezone=Asia/Kolkata")
+    }
 }
 
 repositories {
@@ -27,6 +34,11 @@ dependencies {
     implementation(libs.koin.ktor)
     implementation(libs.database.postgresql)
     implementation(libs.database.sqlite)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

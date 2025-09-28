@@ -1,17 +1,26 @@
 package dev.jason.project.ktor.messenger.plugins
 
-import dev.jason.project.ktor.messenger.data.MessageDto
-import dev.jason.project.ktor.messenger.data.toDomain
-import dev.jason.project.ktor.messenger.data.toDto
-import dev.jason.project.ktor.messenger.data.toLong
-import dev.jason.project.ktor.messenger.domain.DatabaseRepository
-import dev.jason.project.ktor.messenger.domain.Result
-import dev.jason.project.ktor.messenger.domain.User
-import dev.jason.project.ktor.messenger.domain.UserRepository
-import io.ktor.server.application.*
-import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
+import dev.jason.project.ktor.messenger.data.model.MessageDto
+import dev.jason.project.ktor.messenger.data.model.toDomain
+import dev.jason.project.ktor.messenger.data.model.toDto
+import dev.jason.project.ktor.messenger.data.model.toLong
+import dev.jason.project.ktor.messenger.domain.db.MessagesDatabaseRepository
+import dev.jason.project.ktor.messenger.domain.db.UsersDatabaseRepository
+import dev.jason.project.ktor.messenger.domain.model.Result
+import dev.jason.project.ktor.messenger.domain.model.User
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.routing.routing
+import io.ktor.server.websocket.DefaultWebSocketServerSession
+import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.pingPeriod
+import io.ktor.server.websocket.timeout
+import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.CloseReason
+import io.ktor.websocket.Frame
+import io.ktor.websocket.close
+import io.ktor.websocket.readText
+import io.ktor.websocket.send
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -22,8 +31,8 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureSockets() {
-    val dbRepository by inject<DatabaseRepository>()
-    val userRepository by inject<UserRepository>()
+    val messagesDbRepository by inject<MessagesDatabaseRepository>()
+    val usersDbRepository by inject<UsersDatabaseRepository>()
     install(WebSockets) {
         pingPeriod = 15.seconds
         timeout = 15.seconds
@@ -43,7 +52,7 @@ fun Application.configureSockets() {
                 return@webSocket
             }
 
-            val user = userRepository.findUser(User(username, password))
+            val user = usersDbRepository.findUser(User(username, password))
 
             if (user is Result.NotFound) {
                 close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Signup first"))
@@ -83,11 +92,11 @@ fun Application.configureSockets() {
                             message = message,
                             timestamp = LocalDateTime.now().toLong()
                         )
-                        dbRepository.addMessage(serializedMessage.toDomain())
+                        messagesDbRepository.addMessage(serializedMessage.toDomain())
                         launch(Dispatchers.IO) {
                             sessionList.forEach { session ->
                                 if (session != this) {
-                                    val msgToSend = dbRepository.getAllMessages().last { it.message == message }
+                                    val msgToSend = messagesDbRepository.getAllMessages().last { it.message == message }
                                     session.send(Json.encodeToString(msgToSend.toDto()))
                                 }
                             }

@@ -42,3 +42,6 @@ local.properties
 /messenger-android/release/baselineProfiles/1/messenger-android-release.dm
 /messenger-android/release/output-metadata.json
 /messenger-desktop/res/
+
+# Environment files
+.env

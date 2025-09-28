@@ -1,4 +1,4 @@
-package dev.jason.project.ktor.messenger.domain
+package dev.jason.project.ktor.messenger.domain.model
 
 import java.time.LocalDateTime
 
