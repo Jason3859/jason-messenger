@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 WORKDIR /app/messenger-server
 RUN chmod +x ../gradlew
-RUN ../gradlew clean shadowJar --no-daemon
+RUN ../gradlew clean build --no-daemon
 RUN ls -l build/libs
 
 FROM eclipse-temurin:21-jre-alpine
