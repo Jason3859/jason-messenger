@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 rootProject.name = "Messenger"
 
 pluginManagement {
@@ -19,3 +21,4 @@ dependencyResolutionManagement {
 include("messenger-server")
 include(":messenger-android")
 include(":messenger-desktop")
+include(":auth")
