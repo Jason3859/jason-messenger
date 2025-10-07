@@ -8,6 +8,7 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.request.header
 import io.ktor.server.response.respond
 import kotlinx.serialization.Serializable
 
@@ -31,6 +32,11 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
+                val token = this.request.header("Authorization")?.removePrefix("Bearer ")
+                if (token != null && TokenBlacklist.invalidatedTokens.contains(token)) {
+                    return@validate null
+                }
+
                 if (credential.payload.getClaim("username").asString() != "") {
                     JWTPrincipal(credential.payload)
                 } else {

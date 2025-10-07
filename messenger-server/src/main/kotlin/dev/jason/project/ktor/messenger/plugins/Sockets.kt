@@ -5,11 +5,12 @@ import dev.jason.project.ktor.messenger.data.model.toDomain
 import dev.jason.project.ktor.messenger.data.model.toDto
 import dev.jason.project.ktor.messenger.data.model.toLong
 import dev.jason.project.ktor.messenger.domain.db.MessagesDatabaseRepository
-import dev.jason.project.ktor.messenger.domain.db.UsersDatabaseRepository
-import dev.jason.project.ktor.messenger.domain.model.Result
-import dev.jason.project.ktor.messenger.domain.model.User
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
+import io.ktor.server.request.header
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.WebSockets
@@ -32,7 +33,6 @@ import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureSockets() {
     val messagesDbRepository by inject<MessagesDatabaseRepository>()
-    val usersDbRepository by inject<UsersDatabaseRepository>()
     install(WebSockets) {
         pingPeriod = 15.seconds
         timeout = 15.seconds
@@ -42,73 +42,28 @@ fun Application.configureSockets() {
     routing {
         val chatSessions = ConcurrentHashMap<String, MutableList<DefaultWebSocketServerSession>>()
 
-        webSocket("/chat/{chatRoomId}") {
-            val chatRoomId = call.parameters["chatRoomId"]
-            val username = call.request.queryParameters["userId"]
-            val password = call.request.queryParameters["password"]
-
-            if (chatRoomId == null || username == null || password == null) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Missing parameters"))
-                return@webSocket
-            }
-
-            val user = usersDbRepository.findUser(User(username, password))
-
-            if (user is Result.NotFound) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Signup first"))
-                return@webSocket
-            }
-
-            if (user is Result.InvalidPassword) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid password"))
-            }
-
-            val sessionList = chatSessions.getOrPut(chatRoomId) { mutableListOf() }
-            sessionList.add(this)
-
-            println("User $username connected to chat $chatRoomId")
-            sessionList.forEach { session ->
-                session.send(
-                    Json.encodeToString(
-                        MessageDto(
-                            id = Random.nextLong(),
-                            chatRoomId = chatRoomId,
-                            sender = "server@3859✓",
-                            message = "User $username connected to the chat",
-                            timestamp = LocalDateTime.now().toLong()
+        authenticate("auth-jwt") {
+            webSocket("/chat/{chatroomid}") {
+                val chatRoomId = call.parameters["chatroomid"]
+                val principal = call.principal<JWTPrincipal>()
+                    ?: return@webSocket close(
+                        CloseReason(
+                            CloseReason.Codes.CANNOT_ACCEPT,
+                            "unauthorized"
                         )
                     )
-                )
-            }
 
-            try {
-                for (frame in incoming) {
-                    if (frame is Frame.Text) {
-                        val message = frame.readText()
-                        val serializedMessage = MessageDto(
-                            id = Random.nextLong(),
-                            chatRoomId = chatRoomId,
-                            sender = username,
-                            message = message,
-                            timestamp = LocalDateTime.now().toLong()
-                        )
-                        messagesDbRepository.addMessage(serializedMessage.toDomain())
-                        launch(Dispatchers.IO) {
-                            sessionList.forEach { session ->
-                                if (session != this) {
-                                    val msgToSend = messagesDbRepository.getAllMessages().last { it.message == message }
-                                    session.send(Json.encodeToString(msgToSend.toDto()))
-                                }
-                            }
-                        }
-                    }
+                val username = principal.payload.getClaim("username").asString()
+
+                if (chatRoomId == null) {
+                    close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Missing parameters"))
+                    return@webSocket
                 }
-            } catch (e: Exception) {
-                println("WebSocket error for user $username: ${e.localizedMessage}")
-                e.printStackTrace()
-            } finally {
-                sessionList.remove(this)
-                println("User $username disconnected from chat $chatRoomId")
+
+                val sessionList = chatSessions.getOrPut(chatRoomId) { mutableListOf() }
+                sessionList.add(this)
+
+                println("User $username connected to chat $chatRoomId")
                 sessionList.forEach { session ->
                     session.send(
                         Json.encodeToString(
@@ -116,11 +71,59 @@ fun Application.configureSockets() {
                                 id = Random.nextLong(),
                                 chatRoomId = chatRoomId,
                                 sender = "server@3859✓",
-                                message = "User $username disconnected from the chat",
+                                message = "User $username connected to the chat",
                                 timestamp = LocalDateTime.now().toLong()
                             )
                         )
                     )
+                }
+
+                try {
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+                            val message = frame.readText()
+                            val serializedMessage = MessageDto(
+                                id = Random.nextLong(),
+                                chatRoomId = chatRoomId,
+                                sender = username,
+                                message = message,
+                                timestamp = LocalDateTime.now().toLong()
+                            )
+                            messagesDbRepository.addMessage(serializedMessage.toDomain())
+                            launch(Dispatchers.IO) {
+                                sessionList.forEach { session ->
+                                    if (session != this) {
+                                        val msgToSend = messagesDbRepository.getAllMessages()
+                                            .last { it.message == message }
+                                        session.send(Json.encodeToString(msgToSend.toDto()))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    println("WebSocket error for user $username: ${e.localizedMessage}")
+                    e.printStackTrace()
+                } finally {
+                    val token = call.request.header("Authorization")!!.removePrefix("Bearer ")
+
+                    TokenBlacklist.invalidatedTokens.add(token)
+
+                    sessionList.remove(this)
+                    println("User $username disconnected from chat $chatRoomId")
+                    sessionList.forEach { session ->
+                        session.send(
+                            Json.encodeToString(
+                                MessageDto(
+                                    id = Random.nextLong(),
+                                    chatRoomId = chatRoomId,
+                                    sender = "server@3859✓",
+                                    message = "User $username disconnected from the chat",
+                                    timestamp = LocalDateTime.now().toLong()
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }

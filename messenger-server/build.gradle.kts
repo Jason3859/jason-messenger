@@ -39,6 +39,10 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.mongo.driver.kotlin)
+    implementation(libs.mongo.bson.kotlinx)
+    implementation(libs.dotenv)
+    implementation(platform(libs.mongo.driver.bom))
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

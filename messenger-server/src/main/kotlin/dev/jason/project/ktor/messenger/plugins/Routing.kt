@@ -67,7 +67,7 @@ fun Application.configureRouting() {
 
                 call.respond(HttpStatusCode.Created, "User ${body.username} signed in")
             } catch (e: Exception) {
-                call.respond(e.message!!)
+                call.respond(HttpStatusCode.InternalServerError)
                 e.printStackTrace()
             }
         }
@@ -94,7 +94,7 @@ fun Application.configureRouting() {
                     else -> throw IllegalArgumentException("Unknown error")
                 }
             } catch (e: Exception) {
-                call.respond(e.localizedMessage)
+                call.respond(HttpStatusCode.InternalServerError)
                 e.printStackTrace()
             }
         }
@@ -107,7 +107,7 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.Accepted).also { println("User ${body.username} deleted their account") }
                 } else println(response)
             } catch (e: Exception) {
-                call.respond(e.localizedMessage)
+                call.respond(HttpStatusCode.InternalServerError)
                 e.printStackTrace()
             }
         }
@@ -120,7 +120,7 @@ fun Application.configureRouting() {
                 messagesDbRepository.deleteChatRoom(body.chatroomid)
                 call.respond(HttpStatusCode.Accepted).also { println("deleted chatroom ${body.chatroomid}") }
             } catch (e: Exception) {
-                call.respond(e.localizedMessage)
+                call.respond(HttpStatusCode.InternalServerError)
                 e.printStackTrace()
             }
         }
