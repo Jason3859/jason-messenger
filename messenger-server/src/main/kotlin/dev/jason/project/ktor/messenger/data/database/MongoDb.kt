@@ -14,12 +14,13 @@ import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
+import java.net.UnknownHostException
 
 object MongoDb {
 
     private val dotenv = dotenv()
-    private val mongoUrl = dotenv["MONGO_URL"]
-    private val client = MongoClient.create(mongoUrl)
+    private val mongoUrl = dotenv["MONGO_URL"] ?: System.getenv("MONGO_URL")
+    private val client = createMongoClient()
 
     private val database = client.getDatabase("messenger-app")
 
@@ -169,6 +170,27 @@ object MongoDb {
                 System.err.println(e.stackTraceToString())
                 return Result.UnableToDelete
             }
+        }
+    }
+
+    private fun createMongoClient(): MongoClient {
+        try {
+            println("connecting to remote")
+            val client = MongoClient.create(mongoUrl)
+            println("connected to remote")
+            return client
+        } catch (_: UnknownHostException) {
+            println("no internet")
+            println("connecting to local")
+            val client =  MongoClient.create("mongodb://localhost:27017")
+            println("connected to local")
+            return client
+        } catch (_: NullPointerException) {
+            println("url not found")
+            println("connecting to local")
+            val client =  MongoClient.create("mongodb://localhost:27017")
+            println("connected to local")
+            return client
         }
     }
 }
