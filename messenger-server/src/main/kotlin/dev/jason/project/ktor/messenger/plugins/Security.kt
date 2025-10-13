@@ -19,10 +19,10 @@ data class UnauthorizedResponse(val message: String)
 fun Application.configureSecurity() {
     val dotenv = dotenv()
 
-    val secret = dotenv["JWT_SECRET"]
-    val issuer = dotenv["JWT_ISSUER"]
-    val audience = dotenv["JWT_AUDIENCE"]
-    val myRealm = dotenv["JWT_REALM"]
+    val secret = dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET")
+    val issuer = dotenv["JWT_ISSUER"] ?: System.getenv("JWT_ISSUER")
+    val audience = dotenv["JWT_AUDIENCE"] ?: System.getenv("JWT_AUDIENCE")
+    val myRealm = dotenv["JWT_REALM"] ?: System.getenv("JWT_REALM")
 
     install(Authentication) {
         jwt("auth-jwt") {
