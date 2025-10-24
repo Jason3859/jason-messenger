@@ -18,7 +18,10 @@ dependencyResolutionManagement {
     }
 }
 
-include("messenger-server")
+include(":messenger-server")
 include(":messenger-android")
-include(":messenger-desktop")
-include(":auth")
+include(":messenger-android:app")
+include(":messenger-android:auth")
+include(":messenger-android:auth:auth-data")
+include(":messenger-android:auth:auth-domain")
+include(":messenger-android:auth:auth-ui")

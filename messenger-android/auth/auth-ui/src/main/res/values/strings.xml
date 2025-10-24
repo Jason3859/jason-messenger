@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="username_text_field">username_text_field</string>
+    <string name="password_text_field">password_text_field</string>
+    <string name="action_button">action_button</string>
+    <string name="test_user">test-user</string>
+    <string name="test_pwd">test-pwd</string>
+    <string name="snackbar_tag">snackbar_tag</string>
+</resources>
