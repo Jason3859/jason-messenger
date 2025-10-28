@@ -5,6 +5,9 @@ import dev.jason.project.ktor.messenger.plugins.configureRouting
 import dev.jason.project.ktor.messenger.plugins.configureSecurity
 import dev.jason.project.ktor.messenger.plugins.configureSerialization
 import dev.jason.project.ktor.messenger.plugins.configureSockets
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.DotenvException
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -20,6 +23,17 @@ fun Application.module() {
     configureSerialization()
     configureSockets()
     configureRouting()
+}
+
+fun getDotenvInstance(): Dotenv {
+    return try {
+        dotenv()
+    } catch (_: DotenvException) {
+        dotenv {
+            directory = "/etc/secrets"
+            filename = ".env"
+        }
+    }
 }
 
 private fun Application.initKoin() {

@@ -8,6 +8,7 @@ import dev.jason.project.ktor.messenger.data.model.toDto
 import dev.jason.project.ktor.messenger.domain.db.MessagesDatabaseRepository
 import dev.jason.project.ktor.messenger.domain.db.UsersDatabaseRepository
 import dev.jason.project.ktor.messenger.domain.model.Result
+import dev.jason.project.ktor.messenger.getDotenvInstance
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -28,11 +29,14 @@ import java.util.UUID
 data class Token(val token: String)
 
 fun Application.configureRouting() {
+    val dotenv = getDotenvInstance()
+
     val usersDbRepository by inject<UsersDatabaseRepository>()
     val messagesDbRepository by inject<MessagesDatabaseRepository>()
-    val secret = System.getenv("JWT_SECRET")
-    val issuer = System.getenv("JWT_ISSUER")
-    val audience = System.getenv("JWT_AUDIENCE")
+
+    val secret = dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET")
+    val issuer = dotenv["JWT_ISSUER"] ?: System.getenv("JWT_ISSUER")
+    val audience = dotenv["JWT_AUDIENCE"] ?: System.getenv("JWT_AUDIENCE")
 
     routing {
         get("/") {

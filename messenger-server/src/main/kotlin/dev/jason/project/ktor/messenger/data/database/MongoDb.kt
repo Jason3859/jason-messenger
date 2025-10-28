@@ -1,8 +1,10 @@
 package dev.jason.project.ktor.messenger.data.database
 
+import com.mongodb.MongoConfigurationException
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Projections
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import dev.jason.project.ktor.messenger.data.model.toLocalDateTime
 import dev.jason.project.ktor.messenger.data.model.toLong
 import dev.jason.project.ktor.messenger.domain.db.MessagesDatabaseRepository
@@ -10,19 +12,22 @@ import dev.jason.project.ktor.messenger.domain.db.UsersDatabaseRepository
 import dev.jason.project.ktor.messenger.domain.model.Message
 import dev.jason.project.ktor.messenger.domain.model.Result
 import dev.jason.project.ktor.messenger.domain.model.User
-import io.github.cdimascio.dotenv.dotenv
+import dev.jason.project.ktor.messenger.getDotenvInstance
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
-import java.net.UnknownHostException
 
 object MongoDb {
 
-    private val dotenv = dotenv()
+    private val dotenv = getDotenvInstance()
     private val mongoUrl = dotenv["MONGO_URL"] ?: System.getenv("MONGO_URL")
-    private val client = createMongoClient()
+    private val client: MongoClient
+    private val database: MongoDatabase
 
-    private val database = client.getDatabase("messenger-app")
+    init {
+        client = createMongoClient()
+        database = client.getDatabase("messenger-app")
+    }
 
     class UsersDbRepoImpl : UsersDatabaseRepository {
 
@@ -56,11 +61,8 @@ object MongoDb {
 
             var existing = false
 
-            users.forEach {
-                if (it.username == user.username) {
-                    existing = true
-                    return@forEach
-                }
+            if (user in users) {
+                existing = true
             }
 
             if (existing) {
@@ -179,7 +181,7 @@ object MongoDb {
             val client = MongoClient.create(mongoUrl)
             println("connected to remote")
             return client
-        } catch (_: UnknownHostException) {
+        } catch (_: MongoConfigurationException) {
             println("no internet")
             println("connecting to local")
             val client =  MongoClient.create("mongodb://localhost:27017")
