@@ -2,7 +2,7 @@ package dev.jason.project.ktor.messenger.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.github.cdimascio.dotenv.dotenv
+import dev.jason.project.ktor.messenger.getDotenvInstance
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -17,12 +17,12 @@ import kotlinx.serialization.Serializable
 data class UnauthorizedResponse(val message: String)
 
 fun Application.configureSecurity() {
-    val dotenv = dotenv()
+    val dotenv = getDotenvInstance()
 
-    val secret = dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET")
-    val issuer = dotenv["JWT_ISSUER"] ?: System.getenv("JWT_ISSUER")
-    val audience = dotenv["JWT_AUDIENCE"] ?: System.getenv("JWT_AUDIENCE")
-    val myRealm = dotenv["JWT_REALM"] ?: System.getenv("JWT_REALM")
+    val secret = dotenv?.get("JWT_SECRET") ?: System.getenv("JWT_SECRET")
+    val issuer = dotenv?.get("JWT_ISSUER") ?: System.getenv("JWT_ISSUER")
+    val audience = dotenv?.get("JWT_AUDIENCE") ?: System.getenv("JWT_AUDIENCE")
+    val myRealm = dotenv?.get("JWT_REALM") ?: System.getenv("JWT_REALM")
 
     install(Authentication) {
         jwt("auth-jwt") {

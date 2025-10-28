@@ -25,14 +25,12 @@ fun Application.module() {
     configureRouting()
 }
 
-fun getDotenvInstance(): Dotenv {
+fun getDotenvInstance(): Dotenv? {
     return try {
         dotenv()
     } catch (_: DotenvException) {
-        dotenv {
-            directory = "/etc/secrets"
-            filename = ".env"
-        }
+        println(".env file not found!")
+        null
     }
 }
 

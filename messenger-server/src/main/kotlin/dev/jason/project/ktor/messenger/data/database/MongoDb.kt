@@ -20,7 +20,7 @@ import org.bson.types.ObjectId
 object MongoDb {
 
     private val dotenv = getDotenvInstance()
-    private val mongoUrl = dotenv["MONGO_URL"] ?: System.getenv("MONGO_URL")
+    private val mongoUrl = dotenv?.get("MONGO_URL") ?: System.getenv("MONGO_URL")
     private val client: MongoClient
     private val database: MongoDatabase
 

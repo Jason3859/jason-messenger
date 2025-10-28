@@ -34,9 +34,9 @@ fun Application.configureRouting() {
     val usersDbRepository by inject<UsersDatabaseRepository>()
     val messagesDbRepository by inject<MessagesDatabaseRepository>()
 
-    val secret = dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET")
-    val issuer = dotenv["JWT_ISSUER"] ?: System.getenv("JWT_ISSUER")
-    val audience = dotenv["JWT_AUDIENCE"] ?: System.getenv("JWT_AUDIENCE")
+    val secret = dotenv?.get("JWT_SECRET") ?: System.getenv("JWT_SECRET")
+    val issuer = dotenv?.get("JWT_ISSUER") ?: System.getenv("JWT_ISSUER")
+    val audience = dotenv?.get("JWT_AUDIENCE") ?: System.getenv("JWT_AUDIENCE")
 
     routing {
         get("/") {
